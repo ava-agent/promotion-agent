@@ -1,0 +1,32 @@
+{
+  "$schema": "OpenClaw configuration example for promotion-agent skill",
+  "$note": "Merge this into your ~/.openclaw/openclaw.json under the appropriate keys",
+
+  "skills": {
+    "entries": {
+      "promotion-agent": {
+        "enabled": true,
+        "env": {
+          "PROMOTE_MOLTBOOK_API_KEY": "mb_your_key_here",
+
+          "PROMOTE_REDDIT_CLIENT_ID": "your_client_id",
+          "PROMOTE_REDDIT_CLIENT_SECRET": "your_client_secret",
+          "PROMOTE_REDDIT_USERNAME": "your_username",
+          "PROMOTE_REDDIT_PASSWORD": "your_password",
+
+          "PROMOTE_DEVTO_API_KEY": "your_devto_key",
+
+          "PROMOTE_JUEJIN_COOKIE": "your_juejin_cookie_from_browser",
+          "PROMOTE_CSDN_COOKIE": "your_csdn_cookie_from_browser",
+          "PROMOTE_ZHIHU_COOKIE": "your_zhihu_cookie_from_browser",
+
+          "PROMOTE_CNBLOGS_BLOG_URL": "your_blog_id",
+          "PROMOTE_CNBLOGS_USERNAME": "your_username",
+          "PROMOTE_CNBLOGS_TOKEN": "your_api_token",
+
+          "PROMOTE_GITHUB_USERNAME": "kevinten10"
+        }
+      }
+    }
+  }
+}
