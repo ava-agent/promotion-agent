@@ -16,6 +16,18 @@
 
           "PROMOTE_DEVTO_API_KEY": "your_devto_key",
 
+          "PROMOTE_HN_USERNAME": "your_hn_username",
+          "PROMOTE_HN_PASSWORD": "your_hn_password",
+
+          "PROMOTE_X_CONSUMER_KEY": "your_consumer_key",
+          "PROMOTE_X_CONSUMER_SECRET": "your_consumer_secret",
+          "PROMOTE_X_ACCESS_TOKEN": "your_access_token",
+          "PROMOTE_X_ACCESS_TOKEN_SECRET": "your_access_token_secret",
+
+          "PROMOTE_PRODUCTHUNT_TOKEN": "your_producthunt_token",
+
+          "PROMOTE_LINKEDIN_ACCESS_TOKEN": "your_linkedin_access_token",
+
           "PROMOTE_JUEJIN_COOKIE": "your_juejin_cookie_from_browser",
           "PROMOTE_CSDN_COOKIE": "your_csdn_cookie_from_browser",
           "PROMOTE_ZHIHU_COOKIE": "your_zhihu_cookie_from_browser",

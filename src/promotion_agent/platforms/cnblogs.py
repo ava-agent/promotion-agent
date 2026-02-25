@@ -5,6 +5,8 @@ Authentication: Username + API Token (generated in cnblogs settings).
 API endpoint: https://rpc.cnblogs.com/metaweblog/{blogname}
 """
 
+from __future__ import annotations
+
 import xmlrpc.client
 from typing import Optional
 

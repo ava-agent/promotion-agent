@@ -1,5 +1,7 @@
 """Platform management commands."""
 
+from __future__ import annotations
+
 import typer
 
 from promotion_agent.cli.formatters import print_health, print_platforms

@@ -1,5 +1,9 @@
 """Reddit platform via PRAW."""
 
+from __future__ import annotations
+
+from typing import Optional
+
 import praw
 
 from promotion_agent.core.base_platform import BasePlatform
@@ -20,27 +24,37 @@ class RedditPlatform(BasePlatform):
     ]
 
     def __init__(self, config):
-        username = config.reddit_username
-        user_agent = getattr(
+        self._client_id = getattr(config, "reddit_client_id", None)
+        self._client_secret = getattr(config, "reddit_client_secret", None)
+        self._username = getattr(config, "reddit_username", None)
+        self._password = getattr(config, "reddit_password", None)
+        self._user_agent = getattr(
             config,
             "reddit_user_agent",
-            f"promotion-agent:v0.1 (by /u/{username})",
+            f"promotion-agent:v0.1 (by /u/{self._username})",
         )
         self.default_subreddit = getattr(config, "reddit_default_subreddit", "test")
-        self.reddit = praw.Reddit(
-            client_id=config.reddit_client_id,
-            client_secret=config.reddit_client_secret,
-            username=username,
-            password=config.reddit_password,
-            user_agent=user_agent,
-        )
+        self._reddit: Optional[praw.Reddit] = None
+
+    @property
+    def reddit(self) -> praw.Reddit:
+        if self._reddit is None:
+            self._reddit = praw.Reddit(
+                client_id=self._client_id,
+                client_secret=self._client_secret,
+                username=self._username,
+                password=self._password,
+                user_agent=self._user_agent,
+            )
+        return self._reddit
 
     def validate_config(self) -> bool:
-        try:
-            self.reddit.user.me()
-            return True
-        except Exception:
-            return False
+        return bool(
+            self._client_id
+            and self._client_secret
+            and self._username
+            and self._password
+        )
 
     def adapt_content(self, content: PromotionContent) -> dict:
         subreddit = content.metadata.get("reddit_subreddit", self.default_subreddit)

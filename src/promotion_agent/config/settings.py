@@ -42,5 +42,21 @@ class PromotionSettings(BaseSettings):
     cnblogs_username: Optional[str] = None
     cnblogs_token: Optional[str] = None
 
+    # Hacker News - Username/password web form auth
+    hn_username: Optional[str] = None
+    hn_password: Optional[str] = None
+
+    # X (Twitter) - OAuth 1.0a
+    x_consumer_key: Optional[str] = None
+    x_consumer_secret: Optional[str] = None
+    x_access_token: Optional[str] = None
+    x_access_token_secret: Optional[str] = None
+
+    # Product Hunt - OAuth 2.0 Bearer token
+    producthunt_token: Optional[str] = None
+
+    # LinkedIn - OAuth 2.0 access token (expires in 60 days)
+    linkedin_access_token: Optional[str] = None
+
     # General
     github_username: str = "kevinten10"

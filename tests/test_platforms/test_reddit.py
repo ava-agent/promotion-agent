@@ -15,8 +15,25 @@ class MockConfig:
     reddit_default_subreddit = "test"
 
 
-@patch("promotion_agent.platforms.reddit.praw.Reddit")
-def test_adapt_content_selftext(mock_reddit):
+def test_validate_config():
+    platform = RedditPlatform(MockConfig())
+    assert platform.validate_config() is True
+
+
+def test_validate_config_missing():
+    class Empty:
+        reddit_client_id = None
+        reddit_client_secret = None
+        reddit_username = None
+        reddit_password = None
+        reddit_user_agent = None
+        reddit_default_subreddit = "test"
+
+    platform = RedditPlatform(Empty())
+    assert platform.validate_config() is False
+
+
+def test_adapt_content_selftext():
     platform = RedditPlatform(MockConfig())
     content = PromotionContent(
         title="Test Project",
@@ -31,8 +48,7 @@ def test_adapt_content_selftext(mock_reddit):
     assert "https://github.com/test" in payload["selftext"]
 
 
-@patch("promotion_agent.platforms.reddit.praw.Reddit")
-def test_adapt_content_link_post(mock_reddit):
+def test_adapt_content_link_post():
     platform = RedditPlatform(MockConfig())
     content = PromotionContent(
         title="Test Project",
@@ -45,8 +61,7 @@ def test_adapt_content_link_post(mock_reddit):
     assert payload["url"] == "https://github.com/test"
 
 
-@patch("promotion_agent.platforms.reddit.praw.Reddit")
-def test_title_truncation(mock_reddit):
+def test_title_truncation():
     platform = RedditPlatform(MockConfig())
     long_title = "A" * 500
     content = PromotionContent(title=long_title, body="Body")

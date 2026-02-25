@@ -1,5 +1,7 @@
 """Rich console output formatting."""
 
+from __future__ import annotations
+
 from rich.console import Console
 from rich.table import Table
 

@@ -1,9 +1,9 @@
 ---
 name: promotion-agent
-description: Promote GitHub projects to 7 social platforms (MoltBook, Reddit, Dev.to, 掘金, CSDN, 知乎, 博客园). Create posts, cross-post with platform-adapted content, manage templates.
-version: 2.0.0
+description: Promote GitHub projects to 11 social platforms (MoltBook, Reddit, Dev.to, Hacker News, X/Twitter, Product Hunt, LinkedIn, 掘金, CSDN, 知乎, 博客园). Create posts, cross-post with platform-adapted content, manage templates.
+version: 3.0.0
 author: kevinten10
-homepage: https://github.com/kevinten10/promotion-agent
+homepage: https://github.com/ava-agent/promotion-agent
 tags:
   - social
   - promotion
@@ -15,7 +15,7 @@ metadata: {"openclaw":{"emoji":"📣","category":"social","requires":{"bins":["p
 
 # Promotion Agent
 
-Post and promote GitHub projects across 7 social platforms with one command.
+Post and promote GitHub projects across 11 social platforms with one command.
 
 ## Platforms
 
@@ -24,6 +24,10 @@ Post and promote GitHub projects across 7 social platforms with one command.
 | MoltBook | `-p moltbook` | API Key (env: `PROMOTE_MOLTBOOK_API_KEY`) |
 | Reddit | `-p reddit` | OAuth (env: `PROMOTE_REDDIT_CLIENT_ID`, `PROMOTE_REDDIT_CLIENT_SECRET`, `PROMOTE_REDDIT_USERNAME`, `PROMOTE_REDDIT_PASSWORD`) |
 | Dev.to | `-p devto` | API Key (env: `PROMOTE_DEVTO_API_KEY`) |
+| Hacker News | `-p hackernews` | Username/Password (env: `PROMOTE_HN_USERNAME`, `PROMOTE_HN_PASSWORD`) |
+| X (Twitter) | `-p x` | OAuth 1.0a (env: `PROMOTE_X_CONSUMER_KEY`, `PROMOTE_X_CONSUMER_SECRET`, `PROMOTE_X_ACCESS_TOKEN`, `PROMOTE_X_ACCESS_TOKEN_SECRET`) |
+| Product Hunt | `-p producthunt` | Bearer Token (env: `PROMOTE_PRODUCTHUNT_TOKEN`) |
+| LinkedIn | `-p linkedin` | OAuth 2.0 (env: `PROMOTE_LINKEDIN_ACCESS_TOKEN`) |
 | 掘金 | `-p juejin` | Cookie (env: `PROMOTE_JUEJIN_COOKIE`) |
 | CSDN | `-p csdn` | Cookie (env: `PROMOTE_CSDN_COOKIE`) |
 | 知乎 | `-p zhihu` | Cookie (env: `PROMOTE_ZHIHU_COOKIE`) |
@@ -61,6 +65,10 @@ promote post -p juejin --title "标题" --body "内容"
 promote post -p csdn --title "标题" --body "内容"
 promote post -p zhihu --title "标题" --body "内容"
 promote post -p cnblogs --title "标题" --body "内容"
+promote post -p hackernews --title "Show HN: My AI Tool" --url "GITHUB_URL"
+promote post -p x --title "Launched my AI project!" --url "GITHUB_URL" --tag ai
+promote post -p producthunt --title "My AI Tool" --body "Tagline here" --url "GITHUB_URL"
+promote post -p linkedin --title "Excited to share..." --body "BODY" --url "GITHUB_URL"
 
 # Preview without posting
 promote post --all --dry-run --title "TITLE" --body "BODY"
@@ -115,6 +123,14 @@ When the user asks to promote a project, follow this exact flow:
 **知乎** — Cookie auth (expires ~1 month). Publishes to 专栏 (column articles). Good for deep technical content.
 
 **博客园** — Official MetaWeblog API. Token auth (long-lived). Most stable Chinese platform API.
+
+**Hacker News** — No official API, web form scraping. Title max 80 chars. Use "Show HN:" prefix for project launches. Link posts preferred. Anti-spam: wait between submissions.
+
+**X (Twitter)** — Official v2 API via tweepy. 280-char limit. Free tier: 500 posts/month. Include URL and hashtags. Short, punchy announcements.
+
+**Product Hunt** — GraphQL v2 API. Bearer token from developer portal. Best for product launches. Tagline max 60 chars. Include product URL.
+
+**LinkedIn** — ugcPosts API. OAuth 2.0 token (expires 60 days, refresh manually). Professional tone. Good for project milestones and launches.
 
 ## Cookie Auto-Extraction (Browser)
 

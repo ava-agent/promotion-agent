@@ -1,5 +1,7 @@
 """MoltBook platform - AI Agent Social Network."""
 
+from __future__ import annotations
+
 import re
 from typing import Optional
 
@@ -20,7 +22,7 @@ class MoltBookPlatform(BasePlatform):
     BASE_URL = "https://www.moltbook.com/api/v1"
 
     def __init__(self, config):
-        self.api_key = config.moltbook_api_key
+        self.api_key = getattr(config, "moltbook_api_key", None)
         self.default_submolt = getattr(config, "moltbook_default_submolt", "general")
         self._client: Optional[httpx.Client] = None
 

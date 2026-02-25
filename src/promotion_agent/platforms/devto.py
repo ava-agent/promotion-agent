@@ -1,5 +1,7 @@
 """Dev.to platform via Forem API."""
 
+from __future__ import annotations
+
 from typing import Optional
 
 import httpx
@@ -19,7 +21,7 @@ class DevToPlatform(BasePlatform):
     API_URL = "https://dev.to/api/articles"
 
     def __init__(self, config):
-        self.api_key = config.devto_api_key
+        self.api_key = getattr(config, "devto_api_key", None)
         self._client: Optional[httpx.Client] = None
 
     @property

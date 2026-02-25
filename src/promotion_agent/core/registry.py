@@ -1,5 +1,7 @@
 """Platform plugin registry with decorator-based registration."""
 
+from __future__ import annotations
+
 from typing import Type
 
 from promotion_agent.core.base_platform import BasePlatform

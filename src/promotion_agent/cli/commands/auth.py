@@ -50,7 +50,7 @@ def _read_env_dict(path: Path) -> dict[str, str]:
     result: dict[str, str] = {}
     if not path.is_file():
         return result
-    for line in path.read_text().splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
@@ -64,7 +64,7 @@ def _write_env_dict(path: Path, env: dict[str, str]) -> None:
     """Write a dict back to a .env file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     lines = [f"{k}={v}" for k, v in env.items()]
-    path.write_text("\n".join(lines) + "\n")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 @auth_app.command("set-cookie")

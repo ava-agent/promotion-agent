@@ -4,6 +4,8 @@ Workflow: create draft -> update draft content -> publish draft.
 Authentication: Cookie-based (sessionid from browser).
 """
 
+from __future__ import annotations
+
 from typing import Optional
 
 import httpx

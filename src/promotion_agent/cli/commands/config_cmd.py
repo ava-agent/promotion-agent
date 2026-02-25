@@ -30,7 +30,7 @@ def config_show() -> None:
     table.add_column("Key", style="cyan")
     table.add_column("Value")
 
-    secret_keys = {"api_key", "secret", "password"}
+    secret_keys = {"api_key", "secret", "password", "cookie", "token"}
 
     for key, value in settings.model_dump().items():
         display_key = f"PROMOTE_{key.upper()}"
