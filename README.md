@@ -1,24 +1,28 @@
 # Promotion Agent
 
-Automate posting and promoting GitHub/AI projects to **11 social media platforms** with one command.
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Platforms: 11](https://img.shields.io/badge/platforms-11-green.svg)](#supported-platforms)
+
+**One command to post your GitHub/AI projects to 11 social media platforms.**
 
 Supports both standalone CLI usage and [OpenClaw](https://github.com/anthropics/openclaw) AI Agent Skill integration.
 
 ## Supported Platforms
 
-| Platform | Flag | Auth Method | Docs |
-|----------|------|-------------|------|
+| Platform | Flag | Auth Method | Notes |
+|----------|------|-------------|-------|
 | **MoltBook** | `-p moltbook` | API Key | AI agent social network |
-| **Reddit** | `-p reddit` | OAuth (client + user) | r/MachineLearning, r/Python, etc. |
+| **Reddit** | `-p reddit` | OAuth (4 keys) | r/MachineLearning, r/Python, etc. |
 | **Dev.to** | `-p devto` | API Key | Full Markdown, max 4 tags |
 | **Hacker News** | `-p hackernews` | Username/Password | "Show HN:" prefix for launches |
-| **X (Twitter)** | `-p x` | OAuth 1.0a (4 keys) | 280 chars, free 500/month |
+| **X (Twitter)** | `-p x` | OAuth 1.0a (4 keys) | 280 chars, free tier 500/month |
 | **Product Hunt** | `-p producthunt` | Bearer Token | GraphQL API, product launches |
 | **LinkedIn** | `-p linkedin` | OAuth 2.0 Token | Professional announcements |
-| **掘金 (Juejin)** | `-p juejin` | Cookie | China's largest frontend community |
+| **掘金** | `-p juejin` | Cookie | China's largest frontend community |
 | **CSDN** | `-p csdn` | Cookie | China's largest dev community |
-| **知乎 (Zhihu)** | `-p zhihu` | Cookie | Column articles (专栏) |
-| **博客园 (CNBlogs)** | `-p cnblogs` | Token (MetaWeblog) | Official XML-RPC API |
+| **知乎** | `-p zhihu` | Cookie | Column articles (专栏) |
+| **博客园** | `-p cnblogs` | Token (MetaWeblog) | Official XML-RPC API |
 
 ## Quick Start
 
@@ -26,14 +30,15 @@ Supports both standalone CLI usage and [OpenClaw](https://github.com/anthropics/
 
 ```bash
 pip install -e .
+# or from GitHub
+pip install git+https://github.com/ava-agent/promotion-agent.git
 ```
 
 ### 2. Configure credentials
 
-Copy the example and fill in your keys:
-
 ```bash
 cp .env.example .env
+# Edit .env with your API keys
 ```
 
 Or set environment variables with the `PROMOTE_` prefix:
@@ -49,20 +54,20 @@ export PROMOTE_HN_PASSWORD=your_password
 ```bash
 promote platforms list       # Show all 11 platforms
 promote config show          # Show config (secrets masked)
-promote config validate      # Check which platforms have valid credentials
+promote platforms check      # Health check API connectivity
 ```
 
 ### 4. Post
 
 ```bash
 # Preview first (always recommended)
-promote post --all --dry-run --title "My AI Project" --body "Description" --url "https://github.com/you/repo"
+promote post --all --dry-run --title "My AI Project" --body "Description" --url "https://github.com/user/repo"
 
 # Post to all configured platforms
-promote post --all --title "My AI Project" --body "Description" --url "https://github.com/you/repo" --tag ai
+promote post --all --title "My AI Project" --body "Description" --url "https://github.com/user/repo" --tag ai
 
-# Post to a single platform
-promote post -p devto --title "My AI Project" --file ./article.md --tag ai --tag python
+# Post to specific platforms
+promote post -p devto -p reddit --title "My AI Project" --file ./article.md --tag ai --tag python
 ```
 
 ## CLI Reference
@@ -73,18 +78,18 @@ promote post -p devto --title "My AI Project" --file ./article.md --tag ai --tag
 promote post [OPTIONS]
 
 Options:
-  -p, --platform TEXT    Target platform (can repeat: -p reddit -p devto)
+  -p, --platform TEXT    Target platform (repeatable: -p reddit -p devto)
   --all                  Post to all configured platforms
   -t, --title TEXT       Post title (required)
   -b, --body TEXT        Post body text
   -f, --file PATH        Read body from markdown file
   --template TEXT        Use a named template
-  --var TEXT             Template variable KEY=VALUE (can repeat)
-  --tag TEXT             Tags (can repeat)
+  --var TEXT             Template variable KEY=VALUE (repeatable)
+  --tag TEXT             Tags (repeatable)
   --url TEXT             Project URL (included in every post)
   --subreddit TEXT       Reddit: target subreddit
   --submolt TEXT         MoltBook: target submolt
-  --draft                Dev.to: save as draft instead of publishing
+  --draft                Dev.to: save as draft
   --dry-run              Preview without posting
 ```
 
@@ -107,11 +112,11 @@ promote auth clear-cookie juejin             # Remove saved cookie
 
 ```bash
 promote templates list                       # List available templates
-promote templates show github_project_announce  # View template source
+promote templates show github_project_announce
 promote templates render github_project_announce \
-  --var project_name="Trip Agent" \
-  --var description="AI travel planner" \
-  --var github_url="https://github.com/kevinten10/trip-agent"
+  --var project_name="My Project" \
+  --var description="AI-powered tool" \
+  --var github_url="https://github.com/user/repo"
 ```
 
 ### `promote config` - Configuration
@@ -121,110 +126,103 @@ promote config show       # Display all config (secrets masked)
 promote config validate   # Validate credentials for each platform
 ```
 
-## Platform Configuration Guide
+## Platform Configuration
 
 ### International Platforms
 
-**MoltBook** - Get your API key from [moltbook.com](https://moltbook.com) settings:
+**MoltBook** — Get API key from [moltbook.com](https://moltbook.com):
 ```bash
-PROMOTE_MOLTBOOK_API_KEY=mb_your_key_here
+PROMOTE_MOLTBOOK_API_KEY=mb_your_key
 ```
 
-**Reddit** - Create an app at [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps) (script type):
+**Reddit** — Create app at [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps):
 ```bash
-PROMOTE_REDDIT_CLIENT_ID=your_client_id
-PROMOTE_REDDIT_CLIENT_SECRET=your_client_secret
-PROMOTE_REDDIT_USERNAME=your_username
-PROMOTE_REDDIT_PASSWORD=your_password
+PROMOTE_REDDIT_CLIENT_ID=xxx
+PROMOTE_REDDIT_CLIENT_SECRET=xxx
+PROMOTE_REDDIT_USERNAME=xxx
+PROMOTE_REDDIT_PASSWORD=xxx
 ```
 
-**Dev.to** - Generate at [dev.to/settings/extensions](https://dev.to/settings/extensions):
+**Dev.to** — Generate at [dev.to/settings/extensions](https://dev.to/settings/extensions):
 ```bash
-PROMOTE_DEVTO_API_KEY=your_api_key
+PROMOTE_DEVTO_API_KEY=xxx
 ```
 
-**Hacker News** - Your HN account credentials:
+**Hacker News** — Your HN credentials:
 ```bash
-PROMOTE_HN_USERNAME=your_username
-PROMOTE_HN_PASSWORD=your_password
+PROMOTE_HN_USERNAME=xxx
+PROMOTE_HN_PASSWORD=xxx
 ```
 
-**X (Twitter)** - Create app at [developer.x.com](https://developer.x.com), get 4 keys from "Keys and Tokens":
+**X (Twitter)** — Create app at [developer.x.com](https://developer.x.com):
 ```bash
-PROMOTE_X_CONSUMER_KEY=your_consumer_key
-PROMOTE_X_CONSUMER_SECRET=your_consumer_secret
-PROMOTE_X_ACCESS_TOKEN=your_access_token
-PROMOTE_X_ACCESS_TOKEN_SECRET=your_access_token_secret
+PROMOTE_X_CONSUMER_KEY=xxx
+PROMOTE_X_CONSUMER_SECRET=xxx
+PROMOTE_X_ACCESS_TOKEN=xxx
+PROMOTE_X_ACCESS_TOKEN_SECRET=xxx
 ```
 
-**Product Hunt** - Create app at [producthunt.com/v2/oauth/applications](https://api.producthunt.com/v2/oauth/applications):
+**Product Hunt** — Create app at [api.producthunt.com/v2/oauth/applications](https://api.producthunt.com/v2/oauth/applications):
 ```bash
-PROMOTE_PRODUCTHUNT_TOKEN=your_bearer_token
+PROMOTE_PRODUCTHUNT_TOKEN=xxx
 ```
 
-**LinkedIn** - Create app at [linkedin.com/developers](https://www.linkedin.com/developers/), get OAuth 2.0 token with `w_member_social` scope. Token expires in 60 days.
+**LinkedIn** — Create app at [linkedin.com/developers](https://www.linkedin.com/developers/):
 ```bash
-PROMOTE_LINKEDIN_ACCESS_TOKEN=your_access_token
+PROMOTE_LINKEDIN_ACCESS_TOKEN=xxx  # Token expires in 60 days
 ```
 
 ### Chinese Platforms (Cookie Auth)
 
-For 掘金, CSDN, 知乎 — cookies can be extracted two ways:
+For 掘金, CSDN, 知乎 — extract cookies from browser:
 
-**Option A: Manual (F12)**
 1. Log in to the platform in your browser
 2. Open DevTools (F12) > Network tab
 3. Copy the `Cookie` header from any request
 4. Save: `promote auth set-cookie juejin "your_cookie_string"`
 
-**Option B: Auto-extract via OpenClaw browser**
-When using as an OpenClaw Skill, the AI agent can automatically extract cookies from your browser using Extension Relay mode. Just ask: "Help me set up Juejin credentials".
-
 ```bash
-PROMOTE_JUEJIN_COOKIE=your_cookie
-PROMOTE_CSDN_COOKIE=your_cookie
-PROMOTE_ZHIHU_COOKIE=your_cookie
+PROMOTE_JUEJIN_COOKIE=xxx
+PROMOTE_CSDN_COOKIE=xxx
+PROMOTE_ZHIHU_COOKIE=xxx
 ```
 
-**博客园 (CNBlogs)** - Official API, go to [cnblogs.com Settings > API Token]:
+**博客园 (CNBlogs)** — Official API, get token from Settings:
 ```bash
 PROMOTE_CNBLOGS_BLOG_URL=your_blog_id
-PROMOTE_CNBLOGS_USERNAME=your_username
-PROMOTE_CNBLOGS_TOKEN=your_api_token
+PROMOTE_CNBLOGS_USERNAME=xxx
+PROMOTE_CNBLOGS_TOKEN=xxx
 ```
 
 ## Content Templates
 
-Three built-in Jinja2 templates for common scenarios:
+Three built-in Jinja2 templates:
 
 | Template | Use Case | Key Variables |
 |----------|----------|---------------|
-| `github_project_announce` | New project launch | `project_name`, `description`, `github_url`, `features`, `install_command` |
-| `project_update` | Version release | `project_name`, `version`, `summary`, `github_url`, `changes` |
-| `tutorial_share` | Technical tutorial | `title`, `introduction`, `github_url`, `prerequisites`, `steps` |
+| `github_project_announce` | New project launch | `project_name`, `description`, `github_url`, `features` |
+| `project_update` | Version release | `project_name`, `version`, `summary`, `changes` |
+| `tutorial_share` | Technical tutorial | `title`, `introduction`, `prerequisites`, `steps` |
 
 Example:
 ```bash
 promote post --all \
   --template github_project_announce \
-  --var project_name="Trip Agent" \
-  --var description="AI-powered travel planning agent" \
-  --var github_url="https://github.com/kevinten10/trip-agent" \
-  --url "https://github.com/kevinten10/trip-agent" \
-  --tag ai --tag travel
+  --var project_name="My AI Tool" \
+  --var description="AI-powered automation" \
+  --var github_url="https://github.com/user/my-ai-tool" \
+  --url "https://github.com/user/my-ai-tool" \
+  --tag ai --tag automation
 ```
 
 ## OpenClaw Integration
 
-This project works as an [OpenClaw](https://github.com/anthropics/openclaw) Skill. The AI agent reads `SKILL.md` and can autonomously promote your projects.
+This project works as an [OpenClaw](https://github.com/anthropics/openclaw) Skill.
 
 ### Install as OpenClaw Skill
 
 ```bash
-# Clone to OpenClaw skills directory
 git clone https://github.com/ava-agent/promotion-agent.git ~/.openclaw/skills/promotion-agent
-
-# Install
 bash ~/.openclaw/skills/promotion-agent/scripts/install.sh
 ```
 
@@ -249,13 +247,13 @@ Add to `~/.openclaw/openclaw.json`:
 }
 ```
 
-See `openclaw.json.example` for the full template with all platforms.
+See `openclaw.json.example` for the full template.
 
 ### Usage with OpenClaw
 
 Once configured, just tell the agent:
 
-> "Help me promote my Trip Agent project on all platforms"
+> "Help me promote my project on all platforms"
 
 The agent will:
 1. Ask for project details and target platforms
@@ -311,8 +309,11 @@ pytest
 
 # Run linter
 ruff check src/ tests/
+
+# Run with coverage
+pytest --cov=promotion_agent
 ```
 
 ## License
 
-MIT
+[MIT](LICENSE)
