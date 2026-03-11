@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 import httpx
 
-from promotion_agent.core.content import PromotionContent
 from promotion_agent.platforms.zhihu import ZhihuPlatform
 
 
@@ -38,9 +37,7 @@ def test_post_success(sample_content):
 
     # Step 1: create draft
     # Step 2: publish draft
-    mock_client.post.return_value = httpx.Response(
-        200, json={"id": "draft_789"}
-    )
+    mock_client.post.return_value = httpx.Response(200, json={"id": "draft_789"})
     mock_client.put.return_value = httpx.Response(
         200, json={"url": "https://zhuanlan.zhihu.com/p/draft_789"}
     )

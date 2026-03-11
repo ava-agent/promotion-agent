@@ -1,8 +1,7 @@
 """Tests for CNBlogs platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from promotion_agent.core.content import PromotionContent
 from promotion_agent.platforms.cnblogs import CNBlogsPlatform
 
 

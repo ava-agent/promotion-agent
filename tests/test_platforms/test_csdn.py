@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 import httpx
 
-from promotion_agent.core.content import PromotionContent
 from promotion_agent.platforms.csdn import CSDNPlatform
 
 
@@ -40,7 +39,11 @@ def test_post_success(sample_content):
     mock_client = MagicMock()
     mock_client.post.return_value = httpx.Response(
         200,
-        json={"code": 200, "msg": "success", "data": {"id": "12345", "url": "https://blog.csdn.net/xxx/12345"}},
+        json={
+            "code": 200,
+            "msg": "success",
+            "data": {"id": "12345", "url": "https://blog.csdn.net/xxx/12345"},
+        },
     )
     platform._client = mock_client
 

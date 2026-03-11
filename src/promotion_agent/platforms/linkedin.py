@@ -97,17 +97,13 @@ class LinkedInPlatform(BasePlatform):
                         "shareMediaCategory": "NONE",
                     }
                 },
-                "visibility": {
-                    "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
-                },
+                "visibility": {"com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"},
             }
 
             if adapted.get("url"):
                 share = payload["specificContent"]["com.linkedin.ugc.ShareContent"]
                 share["shareMediaCategory"] = "ARTICLE"
-                share["media"] = [
-                    {"status": "READY", "originalUrl": adapted["url"]}
-                ]
+                share["media"] = [{"status": "READY", "originalUrl": adapted["url"]}]
 
             response = self.client.post(f"{self.API_BASE}/ugcPosts", json=payload)
 

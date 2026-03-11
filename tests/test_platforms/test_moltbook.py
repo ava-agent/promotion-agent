@@ -1,10 +1,9 @@
 """Tests for MoltBook platform."""
 
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock
 
 import httpx
 
-from promotion_agent.core.content import PromotionContent
 from promotion_agent.platforms.moltbook import MoltBookPlatform
 
 

@@ -1,7 +1,6 @@
 """Tests for platform registry."""
 
 from promotion_agent.core.base_platform import BasePlatform
-from promotion_agent.core.content import PromotionContent
 from promotion_agent.core.registry import (
     _PLATFORM_REGISTRY,
     get_platform,

@@ -133,9 +133,7 @@ def test_producthunt_health_check_success(mock_config):
 def test_producthunt_health_check_failure(mock_config):
     platform = ProductHuntPlatform(mock_config)
     mock_client = MagicMock()
-    mock_client.post.return_value = httpx.Response(
-        200, json={"data": {"viewer": None}}
-    )
+    mock_client.post.return_value = httpx.Response(200, json={"data": {"viewer": None}})
     platform._client = mock_client
     assert platform.health_check() is False
 

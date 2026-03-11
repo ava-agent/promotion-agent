@@ -115,7 +115,9 @@ class ZhihuPlatform(BasePlatform):
             # Step 2: Publish draft
             pub_data = self._publish_draft(draft_id, adapted)
             if "error" not in pub_data:
-                article_url = pub_data.get("url", f"https://zhuanlan.zhihu.com/p/{draft_id}")
+                article_url = pub_data.get(
+                    "url", f"https://zhuanlan.zhihu.com/p/{draft_id}"
+                )
                 return PostResult(
                     platform=self.PLATFORM_NAME,
                     success=True,

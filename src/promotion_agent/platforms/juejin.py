@@ -52,7 +52,9 @@ class JuejinPlatform(BasePlatform):
             "title": content.title,
             "mark_content": body,
             "brief_content": (content.description or content.title)[:100],
-            "category_id": content.metadata.get("juejin_category_id", "6809637767543259144"),  # 默认: 前端
+            "category_id": content.metadata.get(
+                "juejin_category_id", "6809637767543259144"
+            ),  # 默认: 前端
             "tag_ids": content.metadata.get("juejin_tag_ids", []),
             "cover_image": content.metadata.get("juejin_cover_image", ""),
             "edit_type": 10,

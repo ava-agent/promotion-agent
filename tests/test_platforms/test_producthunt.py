@@ -82,9 +82,7 @@ def test_post_graphql_errors(sample_content):
             "data": {
                 "createPost": {
                     "post": None,
-                    "errors": [
-                        {"field": "url", "message": "has already been taken"}
-                    ],
+                    "errors": [{"field": "url", "message": "has already been taken"}],
                 }
             }
         },

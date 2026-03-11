@@ -136,7 +136,7 @@ class ProductHuntPlatform(BasePlatform):
 
     def health_check(self) -> bool:
         try:
-            query = '{ viewer { user { id } } }'
+            query = "{ viewer { user { id } } }"
             resp = self.client.post(self.API_URL, json={"query": query})
             if resp.is_success:
                 data = resp.json()

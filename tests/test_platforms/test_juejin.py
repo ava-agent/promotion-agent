@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 import httpx
 
-from promotion_agent.core.content import PromotionContent
 from promotion_agent.platforms.juejin import JuejinPlatform
 
 
