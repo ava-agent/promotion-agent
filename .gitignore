@@ -1,29 +1,33 @@
-.DS_Store
+# Python
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
+*.pyo
 *.egg-info/
 dist/
 build/
-.eggs/
-*.egg
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Environment
 .env
 .venv/
 venv/
 env/
-.mypy_cache/
-.pytest_cache/
-.ruff_cache/
+
+# External MCPs (cloned at runtime)
+externals/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Coverage
 htmlcov/
 .coverage
+
+# Logs
 *.log
-
-# Node
-node_modules/
-
-# VitePress
-docs/.vitepress/dist/
-docs/.vitepress/cache/
-
-# OpenClaw
-openclaw.json
