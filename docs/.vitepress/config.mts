@@ -20,7 +20,7 @@ export default defineConfig({
       {
         text: 'Links',
         items: [
-          { text: 'GitHub', link: 'https://github.com/kevinten10/promotion-agent' },
+          { text: 'GitHub', link: 'https://github.com/ava-agent/promotion-agent' },
           { text: 'Postiz', link: 'https://github.com/gitroomhq/postiz-app' },
           { text: 'blog-auto-publishing-tools', link: 'https://github.com/ddean2009/blog-auto-publishing-tools' },
         ]
@@ -67,17 +67,17 @@ export default defineConfig({
       ]
     },
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/kevinten10/promotion-agent' }
+      { icon: 'github', link: 'https://github.com/ava-agent/promotion-agent' }
     ],
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024-present kevinten10'
+      copyright: 'Copyright © 2024-present ava-agent'
     },
     search: {
       provider: 'local'
     },
     editLink: {
-      pattern: 'https://github.com/kevinten10/promotion-agent/edit/main/docs/:path',
+      pattern: 'https://github.com/ava-agent/promotion-agent/edit/main/docs/:path',
       text: 'Edit this page on GitHub'
     }
   }

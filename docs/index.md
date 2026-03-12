@@ -13,7 +13,7 @@ hero:
       link: /guide/getting-started
     - theme: alt
       text: View on GitHub
-      link: https://github.com/kevinten10/promotion-agent
+      link: https://github.com/ava-agent/promotion-agent
 features:
   - icon: 🇨🇳
     title: Chinese Platforms

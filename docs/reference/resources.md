@@ -48,5 +48,5 @@ Curated tutorials, tools, and references for social media automation.
 
 This guide is maintained alongside the **promotion-agent** CLI tool — a Python-based reference implementation supporting all 11 platforms.
 
-- [GitHub Repository](https://github.com/kevinten10/promotion-agent)
-- [MIT License](https://github.com/kevinten10/promotion-agent/blob/main/LICENSE)
+- [GitHub Repository](https://github.com/ava-agent/promotion-agent)
+- [MIT License](https://github.com/ava-agent/promotion-agent/blob/main/LICENSE)
