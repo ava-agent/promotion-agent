@@ -18,5 +18,13 @@ htmlcov/
 .coverage
 *.log
 
+# Node
+node_modules/
+package-lock.json
+
+# VitePress
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+
 # OpenClaw
 openclaw.json
