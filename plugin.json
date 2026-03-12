@@ -1,0 +1,17 @@
+{
+  "name": "promotion-agent",
+  "version": "4.0.0",
+  "description": "多平台社媒自动发布（知乎、小红书、X/Twitter、微信公众号）",
+  "mcpServers": {
+    "promotion-agent": {
+      "command": "python",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/server.py"],
+      "env": {
+        "PROMOTE_ENV_FILE": "${CLAUDE_PLUGIN_ROOT}/.env"
+      }
+    }
+  },
+  "skills": ["skills/*.md"],
+  "hooks": ["hooks/*.json"],
+  "agents": ["agents/*.md"]
+}
