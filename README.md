@@ -86,6 +86,59 @@ jobs:
 
 ---
 
+## Tech Stack & Agent Architecture
+
+This project's reference implementation demonstrates several AI agent design patterns.
+
+### Tech Stack Architecture
+
+Three-layer design: CLI Layer (Typer + Rich + Jinja2) → Core Engine (Orchestrator Agent + Plugin Registry + Content Adapter + Pydantic Settings) → Platform Agents (11 specialized agents with httpx/praw/tweepy).
+
+![Tech Stack Architecture](screenshots/tech-stack-architecture.png)
+
+### Agent Execution Flow — ReAct Pattern
+
+Each platform agent follows a **ReAct (Reason + Act)** loop:
+
+1. **Observe** — Validate config, check platform health
+2. **Think** — Adapt content to platform-specific format and constraints
+3. **Act** — Execute API call (REST / OAuth / Web Scraping / Challenge-Response)
+4. **Reflect** — Check result, handle errors, capture PostResult
+
+Complex platforms implement multi-step agent workflows:
+- **MoltBook**: Challenge → Solve (math) → Verify (ReAct with reasoning)
+- **Hacker News**: Login → CSRF extraction → Form submit (stateful web agent)
+
+![Agent Execution Flow — ReAct Pattern](screenshots/agent-react-flow.png)
+
+### Design Patterns
+
+| Pattern | Implementation |
+|---------|---------------|
+| **Plugin Registry** | `@register_platform` decorator, zero-config discovery |
+| **Strategy Pattern** | Platform-specific `adapt_content()` transforms generic → platform payload |
+| **Template Method** | `BasePlatform` ABC defines `post()` contract, each platform implements |
+| **ReAct Loop** | Observe → Think → Act → Reflect cycle per platform agent |
+| **Error Isolation** | try/catch per platform, failures don't cascade to others |
+| **Factory + Adapter** | `get_platform(name)` creates instance, adapters transform content |
+
+![Design Patterns & Agent Architecture](screenshots/design-patterns.png)
+
+### Content Adaptation Pipeline
+
+Generic `PromotionContent` (title, body, tags, url, metadata) flows through platform-specific adapters that enforce constraints:
+
+- **Reddit**: Title ≤ 300 chars, selftext with URL footer, subreddit routing
+- **Twitter/X**: ≤ 280 chars total, hashtags from tags, URL appended
+- **Dev.to**: Full markdown, max 4 lowercase tags, draft support
+- **Hacker News**: Title ≤ 80 chars, "Show HN:" prefix, link post
+- **Product Hunt**: Tagline ≤ 60 chars, GraphQL mutation
+- **Chinese Platforms**: Cookie auth header, platform-specific JSON payload
+
+![Content Adaptation Pipeline](screenshots/content-adaptation-pipeline.png)
+
+---
+
 ## Resources
 
 ### Tutorials
