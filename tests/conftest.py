@@ -2,7 +2,7 @@
 
 import pytest
 
-from promotion_agent.core.content import PromotionContent
+from core.content import PromotionContent
 
 
 @pytest.fixture

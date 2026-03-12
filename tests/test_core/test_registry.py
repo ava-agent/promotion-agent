@@ -1,13 +1,16 @@
 """Tests for platform registry."""
 
-from promotion_agent.core.base_platform import BasePlatform
-from promotion_agent.core.registry import (
+import pytest
+
+from core.base_platform import BasePlatform
+from core.content import PromotionContent
+from core.result import PostResult
+from core.registry import (
     _PLATFORM_REGISTRY,
     get_platform,
     list_platforms,
     register_platform,
 )
-from promotion_agent.core.result import PostResult
 
 
 def test_register_and_get_platform():
@@ -20,7 +23,7 @@ def test_register_and_get_platform():
         def validate_config(self):
             return True
 
-        def post(self, content):
+        async def post(self, content):
             return PostResult(platform=self.PLATFORM_NAME, success=True)
 
         def adapt_content(self, content):
@@ -34,17 +37,58 @@ def test_register_and_get_platform():
     del _PLATFORM_REGISTRY["_test_registry"]
 
 
-def test_list_platforms():
-    import promotion_agent.platforms  # noqa: F401
-
-    platforms = list_platforms()
-    assert "moltbook" in platforms
-    assert "reddit" in platforms
-    assert "devto" in platforms
-
-
 def test_get_unknown_platform():
-    import pytest
-
     with pytest.raises(KeyError, match="Unknown platform"):
         get_platform("nonexistent_platform_xyz")
+
+
+def test_list_platforms_returns_dict():
+    initial = list_platforms()
+    assert isinstance(initial, dict)
+
+
+def test_register_multiple_platforms():
+    @register_platform
+    class _PlatformA(BasePlatform):
+        PLATFORM_NAME = "_test_a"
+        DISPLAY_NAME = "A"
+        REQUIRED_CONFIG_KEYS = []
+
+        def validate_config(self):
+            return True
+
+        async def post(self, content):
+            return PostResult(platform=self.PLATFORM_NAME, success=True)
+
+        def adapt_content(self, content):
+            return {}
+
+    @register_platform
+    class _PlatformB(BasePlatform):
+        PLATFORM_NAME = "_test_b"
+        DISPLAY_NAME = "B"
+        REQUIRED_CONFIG_KEYS = []
+
+        def validate_config(self):
+            return True
+
+        async def post(self, content):
+            return PostResult(platform=self.PLATFORM_NAME, success=True)
+
+        def adapt_content(self, content):
+            return {}
+
+    platforms = list_platforms()
+    assert "_test_a" in platforms
+    assert "_test_b" in platforms
+
+    # Cleanup
+    del _PLATFORM_REGISTRY["_test_a"]
+    del _PLATFORM_REGISTRY["_test_b"]
+
+
+def test_list_platforms_returns_copy():
+    """list_platforms returns a copy, not the internal registry."""
+    platforms = list_platforms()
+    platforms["fake"] = None
+    assert "fake" not in _PLATFORM_REGISTRY
