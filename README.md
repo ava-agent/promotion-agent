@@ -220,42 +220,7 @@ PROMOTE_MOLTBOOK_DEFAULT_SUBMOLT=general
 
 本项目是一个 **Claude Code Plugin**，内嵌了一个 **MCP Server**。两者协同工作：
 
-```mermaid
-graph TD
-    User["👤 User in Claude Code"]
-
-    subgraph Plugin["promotion-agent Plugin (plugin.json)"]
-        Skill["/publish Skill<br/>交互式发布引导"]
-        Agent["Publisher Agent<br/>批量自动发布"]
-        Hook["Auth Hook<br/>PreToolUse 认证校验"]
-    end
-
-    subgraph MCP["MCP Server (server.py)"]
-        Publish["Publish Tools<br/>publish_zhihu / publish_x<br/>publish_xiaohongshu / publish_wechat"]
-        Auth["Auth Tools<br/>auth_status / auth_set_cookie<br/>auth_health_check / auth_qr_login"]
-        Util["Utility Tools<br/>list_platforms / preview_content"]
-    end
-
-    subgraph Platforms["Platform Implementations"]
-        CN["🇨🇳 知乎 · 掘金 · CSDN · 博客园"]
-        INT["🌍 Dev.to · LinkedIn · Reddit<br/>X/Twitter · Product Hunt"]
-        Other["📦 MoltBook · Hacker News"]
-    end
-
-    User -->|"自然语言 / /publish"| Skill
-    User -->|"批量发布"| Agent
-    Skill --> Hook
-    Agent --> Hook
-    Hook -->|"验证通过"| Publish
-    Hook -->|"验证通过"| Auth
-    Hook -->|"验证通过"| Util
-    Publish --> Platforms
-    Auth --> Platforms
-
-    style Plugin fill:#1a1a2e,stroke:#e94560,color:#fff
-    style MCP fill:#16213e,stroke:#0f3460,color:#fff
-    style Platforms fill:#0f3460,stroke:#53a8b6,color:#fff
-```
+![promotion-agent Architecture](docs/images/architecture.png)
 
 **核心组件**：
 
