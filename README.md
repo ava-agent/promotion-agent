@@ -220,37 +220,52 @@ PROMOTE_MOLTBOOK_DEFAULT_SUBMOLT=general
 
 本项目是一个 **Claude Code Plugin**，内嵌了一个 **MCP Server**。两者协同工作：
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  Claude Code                                            │
-│                                                         │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │  promotion-agent Plugin (plugin.json)           │    │
-│  │                                                 │    │
-│  │  ┌───────────┐  ┌──────────┐  ┌─────────────┐  │    │
-│  │  │  Skills   │  │  Agents  │  │   Hooks     │  │    │
-│  │  │ /publish  │  │ publisher│  │ auth-check  │  │    │
-│  │  └─────┬─────┘  └────┬─────┘  └──────┬──────┘  │    │
-│  │        │              │               │         │    │
-│  │        └──────────────┼───────────────┘         │    │
-│  │                       ▼                         │    │
-│  │         ┌─────────────────────────┐             │    │
-│  │         │   MCP Server (FastMCP)  │             │    │
-│  │         │   server.py — 10 tools  │             │    │
-│  │         └────────────┬────────────┘             │    │
-│  │                      ▼                          │    │
-│  │         ┌─────────────────────────┐             │    │
-│  │         │  Platform Implementations│             │    │
-│  │         │  zhihu / juejin / csdn  │             │    │
-│  │         │  devto / linkedin / ... │             │    │
-│  │         └─────────────────────────┘             │    │
-│  └─────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    User["👤 User in Claude Code"]
+
+    subgraph Plugin["promotion-agent Plugin (plugin.json)"]
+        Skill["/publish Skill<br/>交互式发布引导"]
+        Agent["Publisher Agent<br/>批量自动发布"]
+        Hook["Auth Hook<br/>PreToolUse 认证校验"]
+    end
+
+    subgraph MCP["MCP Server (server.py)"]
+        Publish["Publish Tools<br/>publish_zhihu / publish_x<br/>publish_xiaohongshu / publish_wechat"]
+        Auth["Auth Tools<br/>auth_status / auth_set_cookie<br/>auth_health_check / auth_qr_login"]
+        Util["Utility Tools<br/>list_platforms / preview_content"]
+    end
+
+    subgraph Platforms["Platform Implementations"]
+        CN["🇨🇳 知乎 · 掘金 · CSDN · 博客园"]
+        INT["🌍 Dev.to · LinkedIn · Reddit<br/>X/Twitter · Product Hunt"]
+        Other["📦 MoltBook · Hacker News"]
+    end
+
+    User -->|"自然语言 / /publish"| Skill
+    User -->|"批量发布"| Agent
+    Skill --> Hook
+    Agent --> Hook
+    Hook -->|"验证通过"| Publish
+    Hook -->|"验证通过"| Auth
+    Hook -->|"验证通过"| Util
+    Publish --> Platforms
+    Auth --> Platforms
+
+    style Plugin fill:#1a1a2e,stroke:#e94560,color:#fff
+    style MCP fill:#16213e,stroke:#0f3460,color:#fff
+    style Platforms fill:#0f3460,stroke:#53a8b6,color:#fff
 ```
 
-- **Plugin** — 定义 Skills（交互式发布流程）、Agents（批量发布子代理）、Hooks（发布前认证校验）
-- **MCP Server** — 通过 `plugin.json` 作为子进程启动，暴露 10 个工具供 Claude 调用
-- **Hooks** — `PreToolUse` 拦截所有 `publish_*` 调用，在发布前自动验证认证状态
+**核心组件**：
+
+| 层级 | 组件 | 作用 |
+|------|------|------|
+| **交互层** | Skills (`/publish`) | 引导用户完成发布流程：选平台 → 预览 → 确认 → 发布 |
+| **自动化层** | Agents (`publisher`) | 读取内容文件，按平台拆分，批量发布，输出汇总 |
+| **安全层** | Hooks (`auth-check`) | `PreToolUse` 拦截所有 `publish_*` 调用，发布前自动验证认证 |
+| **执行层** | MCP Server (`server.py`) | 10 个工具，通过 `plugin.json` 作为子进程启动 |
+| **平台层** | Platform classes | 每个平台独立实现 `adapt_content()` + `post()` |
 
 ---
 
