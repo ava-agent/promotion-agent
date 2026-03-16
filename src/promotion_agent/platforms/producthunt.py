@@ -38,6 +38,7 @@ class ProductHuntPlatform(BasePlatform):
                     "Accept": "application/json",
                 },
                 timeout=30.0,
+                trust_env=False,  # 禁用系统代理避免SSL问题
             )
         return self._client
 

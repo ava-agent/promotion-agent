@@ -58,11 +58,31 @@ Detailed setup and usage guides for each Chinese platform.
 - Knowledge-sharing platform (Q&A + articles)
 - High-quality audience
 - Column (专栏) articles for long-form content
+- Automatic cookie extraction script included
+
+**Setup:**
+
+```bash
+# Auto-extract cookie from Chrome (recommended)
+python3 get_zhihu_cookie.py
+
+# Or manually set in .env
+PROMOTE_ZHIHU_COOKIE="your_cookie_here"
+```
+
+**Auto-Extraction Script:**
+
+The included `get_zhihu_cookie.py` script automatically:
+1. Finds the most recently used Chrome profile
+2. Extracts zhihu.com cookies
+3. Updates `.env` file
+4. Validates cookie by testing API access
 
 **Tips:**
 - Best for deep technical content and thought leadership
 - Engage with Q&A for additional visibility
 - Professional tone works best
+- Re-run the script when cookie expires (~1 month)
 
 ---
 
@@ -89,9 +109,36 @@ Detailed setup and usage guides for each Chinese platform.
 
 ## Cookie Extraction Guide
 
-For Juejin, CSDN, and Zhihu, you need to extract browser cookies:
+### All Platforms - Automatic Extraction (Recommended)
 
-### Manual Method
+Promotion Agent includes automatic cookie extraction scripts:
+
+```bash
+# Extract cookies for all platforms (Zhihu, Juejin, CSDN)
+python3 get_cookies.py
+
+# Or extract for a specific platform
+python3 get_zhihu_cookie.py
+```
+
+These scripts will:
+1. 🔍 Scan all Chrome profiles to find the most recently used one
+2. 📤 Extract cookies for each platform
+3. 📝 Automatically update `.env` file
+4. ✅ Validate cookies by testing API access
+
+**Requirements:**
+- Must be logged in to each platform in Chrome
+- Python 3 with `browser-cookie3` package
+
+**Supported Platforms:**
+- ✅ 知乎 (Zhihu) - Full support
+- ✅ 掘金 (Juejin) - Cookie extraction works
+- ✅ CSDN - Cookie extraction works
+
+### Manual Method (All Platforms)
+
+For other platforms or if auto-extraction fails:
 
 1. Log in to the platform in your browser
 2. Open DevTools (`F12`) → **Application** → **Cookies**
@@ -104,19 +151,8 @@ export PROMOTE_CSDN_COOKIE="your_cookie_here"
 export PROMOTE_ZHIHU_COOKIE="your_cookie_here"
 ```
 
-### Auto-Extraction (with OpenClaw)
-
-```bash
-# Using browser tool to auto-extract
-promote auth set-cookie juejin "extracted_cookie"
-promote auth set-cookie csdn "extracted_cookie"
-promote auth set-cookie zhihu "extracted_cookie"
-
-# Verify
-promote auth status
-promote platforms check
-```
-
 ::: warning Cookie Expiry
-Cookies expire approximately every 1 month. If posting fails with authentication errors, re-extract your cookies using the steps above.
+Cookies expire approximately every 1 month. If posting fails with authentication errors:
+- **Zhihu**: Re-run `python3 get_zhihu_cookie.py`
+- **Others**: Manually re-extract cookies using the steps above
 :::

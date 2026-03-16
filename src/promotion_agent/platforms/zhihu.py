@@ -43,6 +43,7 @@ class ZhihuPlatform(BasePlatform):
                     "X-Requested-With": "XMLHttpRequest",
                 },
                 timeout=30.0,
+                trust_env=False,  # 禁用系统代理避免SSL问题
             )
         return self._client
 

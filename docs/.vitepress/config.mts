@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   title: 'Promotion Agent',
-  description: 'Cross-platform social media publishing guide — curated tools & workflows for 11+ platforms',
+  description: 'Claude Code Plugin for automated cross-platform publishing — supports 知乎, 小红书, X/Twitter, and more',
   base: '/promotion-agent/',
   head: [
     ['meta', { property: 'og:title', content: 'Promotion Agent — Cross-Platform Publishing Guide' }],
@@ -20,7 +20,7 @@ export default defineConfig({
       {
         text: 'Links',
         items: [
-          { text: 'GitHub', link: 'https://github.com/ava-agent/promotion-agent' },
+          { text: 'GitHub', link: 'https://github.com/kevinten10/promotion-agent' },
           { text: 'Postiz', link: 'https://github.com/gitroomhq/postiz-app' },
           { text: 'blog-auto-publishing-tools', link: 'https://github.com/ddean2009/blog-auto-publishing-tools' },
         ]
@@ -32,12 +32,13 @@ export default defineConfig({
           text: 'Getting Started',
           items: [
             { text: 'Introduction', link: '/guide/getting-started' },
+            { text: 'Plugin Usage', link: '/guide/plugin-usage' },
             { text: 'Tool Selection', link: '/guide/tool-selection' },
             { text: 'Architecture', link: '/guide/architecture' },
           ]
         },
         {
-          text: 'Workflows',
+          text: 'External Workflows',
           items: [
             { text: 'Chinese Platforms', link: '/guide/chinese-platforms' },
             { text: 'International Platforms', link: '/guide/international-platforms' },
@@ -50,6 +51,7 @@ export default defineConfig({
           text: 'Platforms',
           items: [
             { text: 'Overview', link: '/platforms/overview' },
+            { text: 'Status & Testing', link: '/platforms/status' },
             { text: 'Chinese Platforms', link: '/platforms/chinese' },
             { text: 'International Platforms', link: '/platforms/international' },
           ]
@@ -67,7 +69,7 @@ export default defineConfig({
       ]
     },
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/ava-agent/promotion-agent' }
+      { icon: 'github', link: 'https://github.com/kevinten10/promotion-agent' }
     ],
     footer: {
       message: 'Released under the MIT License.',
@@ -77,7 +79,7 @@ export default defineConfig({
       provider: 'local'
     },
     editLink: {
-      pattern: 'https://github.com/ava-agent/promotion-agent/edit/main/docs/:path',
+      pattern: 'https://github.com/kevinten10/promotion-agent/edit/main/docs/:path',
       text: 'Edit this page on GitHub'
     }
   }
