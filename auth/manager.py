@@ -21,14 +21,48 @@ class AuthStatus:
 
     configured: bool
     valid: bool
-    expires_hint: str  # "long-lived" | "~1 month" | "session"
+    expires_hint: str  # "long-lived" | "~1 month" | "~30 days" | "~60 days" | "session" | "none"
     message: str
 
 
 # Platforms that support set_cookie and their env var names
 _COOKIE_PLATFORMS = {
     "zhihu": "PROMOTE_ZHIHU_COOKIE",
+    "juejin": "PROMOTE_JUEJIN_COOKIE",
+    "csdn": "PROMOTE_CSDN_COOKIE",
+    "segmentfault": "PROMOTE_SEGMENTFAULT_COOKIE",
+    "oschina": "PROMOTE_OSCHINA_COOKIE",
 }
+
+# Auth definitions: (platform, settings_keys, expires_hint, configured_msg, missing_msg)
+_AUTH_DEFINITIONS: list[tuple[str, list[str], str, str, str]] = [
+    # Original 4
+    ("zhihu", ["zhihu_cookie"], "~1 month", "Cookie configured", "No cookie set"),
+    ("x", ["x_consumer_key", "x_consumer_secret", "x_access_token", "x_access_token_secret"],
+     "long-lived", "OAuth 1.0a configured", "Missing OAuth credentials"),
+    ("wechat", ["wechat_app_id", "wechat_app_secret"],
+     "long-lived", "App credentials configured", "Missing app_id or app_secret"),
+    # Legacy migrated
+    ("juejin", ["juejin_cookie"], "~1 month", "Cookie configured", "No cookie set"),
+    ("csdn", ["csdn_cookie"], "~1 month", "Cookie configured", "No cookie set"),
+    ("devto", ["devto_api_key"], "long-lived", "API key configured", "No API key set"),
+    ("reddit", ["reddit_client_id", "reddit_client_secret", "reddit_username", "reddit_password"],
+     "long-lived", "OAuth configured", "Missing Reddit credentials"),
+    ("linkedin", ["linkedin_access_token"], "~60 days", "Access token configured", "No access token set"),
+    ("producthunt", ["producthunt_token"], "long-lived", "Token configured", "No token set"),
+    ("cnblogs", ["cnblogs_blog_url", "cnblogs_username", "cnblogs_token"],
+     "long-lived", "MetaWeblog credentials configured", "Missing CNBlogs credentials"),
+    ("hackernews", ["hn_username", "hn_password"],
+     "long-lived", "Credentials configured", "Missing HN username/password"),
+    ("moltbook", ["moltbook_api_key"], "long-lived", "API key configured", "No API key set"),
+    # New platforms
+    ("medium", ["medium_integration_token"], "long-lived", "Integration token configured", "No integration token set"),
+    ("hashnode", ["hashnode_token"], "long-lived", "Personal access token configured", "No token set"),
+    ("weibo", ["weibo_access_token"], "~30 days", "Access token configured", "No access token set"),
+    ("v2ex", ["v2ex_token"], "long-lived", "Personal access token configured", "No token set"),
+    ("segmentfault", ["segmentfault_cookie"], "~1 month", "Cookie configured", "No cookie set"),
+    ("oschina", ["oschina_cookie"], "~1 month", "Cookie configured", "No cookie set"),
+]
 
 
 class AuthManager:
@@ -48,62 +82,44 @@ class AuthManager:
         self._settings = settings
         self._env_file_path = env_file_path
 
-    def status_all(self) -> dict[str, AuthStatus]:
-        """Return auth status for all four supported platforms."""
-        return {
-            "zhihu": self._zhihu_status(),
-            "x": self._x_status(),
-            "xiaohongshu": self._xiaohongshu_status(),
-            "wechat": self._wechat_status(),
-        }
-
-    def _zhihu_status(self) -> AuthStatus:
-        configured = bool(self._settings.zhihu_cookie)
-        return AuthStatus(
-            configured=configured,
-            valid=configured,  # Can't verify without network call
-            expires_hint="~1 month",
-            message="Cookie configured" if configured else "No cookie set",
-        )
-
-    def _x_status(self) -> AuthStatus:
-        configured = bool(
-            self._settings.x_consumer_key
-            and self._settings.x_consumer_secret
-            and self._settings.x_access_token
-            and self._settings.x_access_token_secret
-        )
+    def _get_status(self, keys: list[str], expires_hint: str,
+                    configured_msg: str, missing_msg: str) -> AuthStatus:
+        """Build AuthStatus by checking whether all settings keys are set."""
+        configured = all(getattr(self._settings, k, None) for k in keys)
         return AuthStatus(
             configured=configured,
             valid=configured,
-            expires_hint="long-lived",
-            message="OAuth 1.0a configured" if configured else "Missing OAuth credentials",
+            expires_hint=expires_hint,
+            message=configured_msg if configured else missing_msg,
         )
 
-    def _xiaohongshu_status(self) -> AuthStatus:
-        return AuthStatus(
-            configured=False,
-            valid=False,
+    def status_all(self) -> dict[str, AuthStatus]:
+        """Return auth status for all supported platforms."""
+        result: dict[str, AuthStatus] = {}
+
+        for platform, keys, hint, ok_msg, fail_msg in _AUTH_DEFINITIONS:
+            result[platform] = self._get_status(keys, hint, ok_msg, fail_msg)
+
+        # Special cases
+        result["xiaohongshu"] = AuthStatus(
+            configured=False, valid=False,
             expires_hint="session",
             message="Requires QR code login via auth_qr_login()",
         )
 
-    def _wechat_status(self) -> AuthStatus:
-        configured = bool(
-            self._settings.wechat_app_id and self._settings.wechat_app_secret
-        )
-        return AuthStatus(
-            configured=configured,
-            valid=configured,
-            expires_hint="long-lived",
-            message="App credentials configured" if configured else "Missing app_id or app_secret",
-        )
+        # AI directories — no auth needed
+        for name in ("taaft", "futurepedia", "toolify"):
+            result[name] = AuthStatus(True, True, "none", "No auth required")
+
+        return result
+
+    # -- Cookie management --------------------------------------------------
 
     def set_cookie(self, platform: str, cookie: str) -> None:
         """Write a cookie value to the env file.
 
         Args:
-            platform: Platform name (currently only 'zhihu' supported).
+            platform: Platform name (zhihu, juejin, csdn, segmentfault, oschina).
             cookie: The cookie string to store.
 
         Raises:
@@ -124,12 +140,7 @@ class AuthManager:
         self._write_env_var(env_key, cookie)
 
     def _write_env_var(self, key: str, value: str) -> None:
-        """Write or update an env var in the env file.
-
-        If the key already exists, replaces its value.
-        If not, appends a new line.
-        Creates the file if it doesn't exist.
-        """
+        """Write or update an env var in the env file."""
         path = self._env_file_path
         lines: list[str] = []
         found = False

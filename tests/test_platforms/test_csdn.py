@@ -1,10 +1,11 @@
-"""Tests for CSDN platform."""
+"""Tests for CSDN platform (async v4)."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import httpx
+import pytest
 
-from promotion_agent.platforms.csdn import CSDNPlatform
+from platforms.csdn import CSDNPlatform
 
 
 class MockConfig:
@@ -34,30 +35,39 @@ def test_adapt_content(sample_content):
     assert "ai,python,automation" == payload["tags"]
 
 
-def test_post_success(sample_content):
+@pytest.mark.asyncio
+async def test_post_success(sample_content):
     platform = CSDNPlatform(MockConfig())
-    mock_client = MagicMock()
-    mock_client.post.return_value = httpx.Response(
-        200,
-        json={
-            "code": 200,
-            "msg": "success",
-            "data": {"id": "12345", "url": "https://blog.csdn.net/xxx/12345"},
-        },
-    )
+    mock_client = AsyncMock()
+
+    response = MagicMock()
+    response.is_success = True
+    response.status_code = 200
+    response.json.return_value = {
+        "code": 200,
+        "msg": "success",
+        "data": {"id": "12345", "url": "https://blog.csdn.net/xxx/12345"},
+    }
+    mock_client.post.return_value = response
     platform._client = mock_client
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is True
     assert result.post_id == "12345"
 
 
-def test_post_failure(sample_content):
+@pytest.mark.asyncio
+async def test_post_failure(sample_content):
     platform = CSDNPlatform(MockConfig())
-    mock_client = MagicMock()
-    mock_client.post.return_value = httpx.Response(403, text="Forbidden")
+    mock_client = AsyncMock()
+
+    response = MagicMock()
+    response.is_success = False
+    response.status_code = 403
+    response.text = "Forbidden"
+    mock_client.post.return_value = response
     platform._client = mock_client
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is False
     assert "403" in result.error

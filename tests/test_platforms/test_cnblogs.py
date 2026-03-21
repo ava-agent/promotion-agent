@@ -1,8 +1,10 @@
-"""Tests for CNBlogs platform."""
+"""Tests for CNBlogs platform (async v4 with to_thread)."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
-from promotion_agent.platforms.cnblogs import CNBlogsPlatform
+import pytest
+
+from platforms.cnblogs import CNBlogsPlatform
 
 
 class MockConfig:
@@ -34,20 +36,22 @@ def test_adapt_content(sample_content):
     assert payload["mt_keywords"] == "ai,python,automation"
 
 
-def test_post_success(sample_content):
+@pytest.mark.asyncio
+async def test_post_success(sample_content):
     platform = CNBlogsPlatform(MockConfig())
     mock_proxy = MagicMock()
     mock_proxy.metaWeblog.newPost.return_value = "12345678"
     platform._proxy = mock_proxy
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is True
     assert "12345678" in result.url
     assert result.post_id == "12345678"
     mock_proxy.metaWeblog.newPost.assert_called_once()
 
 
-def test_post_failure(sample_content):
+@pytest.mark.asyncio
+async def test_post_failure(sample_content):
     import xmlrpc.client
 
     platform = CNBlogsPlatform(MockConfig())
@@ -57,6 +61,6 @@ def test_post_failure(sample_content):
     )
     platform._proxy = mock_proxy
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is False
     assert "Token expired" in result.error

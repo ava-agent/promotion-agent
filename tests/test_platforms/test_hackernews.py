@@ -1,11 +1,13 @@
-"""Tests for Hacker News platform."""
+"""Tests for Hacker News platform (async v4)."""
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
-from promotion_agent.core.content import PromotionContent
-from promotion_agent.platforms.hackernews import HackerNewsPlatform
+import pytest
+
+from core.content import PromotionContent
+from platforms.hackernews import HackerNewsPlatform
 
 
 class MockConfig:
@@ -54,23 +56,25 @@ def test_adapt_content_title_truncation():
     assert len(payload["title"]) == 80
 
 
-def test_post_login_failure(sample_content):
+@pytest.mark.asyncio
+async def test_post_login_failure(sample_content):
     platform = HackerNewsPlatform(MockConfig())
-    mock_client = MagicMock()
+    mock_client = AsyncMock()
     mock_resp = MagicMock()
     mock_resp.cookies = {}
     mock_client.post.return_value = mock_resp
     mock_client.cookies = {}
     platform._client = mock_client
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is False
     assert "Login failed" in result.error
 
 
-def test_post_fnid_extraction_failure(sample_content):
+@pytest.mark.asyncio
+async def test_post_fnid_extraction_failure(sample_content):
     platform = HackerNewsPlatform(MockConfig())
-    mock_client = MagicMock()
+    mock_client = AsyncMock()
 
     login_resp = MagicMock()
     login_resp.cookies = {"user": "abc123"}
@@ -83,14 +87,15 @@ def test_post_fnid_extraction_failure(sample_content):
     mock_client.cookies = {}
     platform._client = mock_client
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is False
     assert "fnid" in result.error.lower()
 
 
-def test_post_success(sample_content):
+@pytest.mark.asyncio
+async def test_post_success(sample_content):
     platform = HackerNewsPlatform(MockConfig())
-    mock_client = MagicMock()
+    mock_client = AsyncMock()
 
     login_resp = MagicMock()
     login_resp.cookies = {"user": "abc123"}
@@ -109,14 +114,15 @@ def test_post_success(sample_content):
     mock_client.cookies = {}
     platform._client = mock_client
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is True
     assert "newest" in result.url
 
 
-def test_post_rate_limited(sample_content):
+@pytest.mark.asyncio
+async def test_post_rate_limited(sample_content):
     platform = HackerNewsPlatform(MockConfig())
-    mock_client = MagicMock()
+    mock_client = AsyncMock()
 
     login_resp = MagicMock()
     login_resp.cookies = {"user": "abc123"}
@@ -135,6 +141,6 @@ def test_post_rate_limited(sample_content):
     mock_client.cookies = {}
     platform._client = mock_client
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is False
     assert "Rate limited" in result.error

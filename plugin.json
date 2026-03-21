@@ -1,7 +1,7 @@
 {
   "name": "promotion-agent",
   "version": "4.0.0",
-  "description": "多平台社媒自动发布（知乎、小红书、X/Twitter、微信公众号）",
+  "description": "多平台内容自动发布（21个平台: 知乎、掘金、CSDN、小红书、微信、X、微博、Medium、Hashnode、Reddit、Dev.to、LinkedIn、Product Hunt、V2EX、SegmentFault、OSCHINA、博客园、HackerNews、MoltBook + AI目录提交）",
   "mcpServers": {
     "promotion-agent": {
       "command": "python",

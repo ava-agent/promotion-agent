@@ -54,11 +54,11 @@ class TestAuthManagerDefaults:
         assert statuses["wechat"].configured is False
         assert statuses["wechat"].expires_hint == "long-lived"
 
-    def test_returns_four_platforms(self):
+    def test_returns_all_platforms(self):
         settings = PromotionSettings(_env_file=None)
         mgr = AuthManager(settings)
         statuses = mgr.status_all()
-        assert len(statuses) == 4
+        assert len(statuses) == 22  # 18 platforms + 3 directories + xiaohongshu
 
 
 class TestAuthManagerConfigured:

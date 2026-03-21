@@ -1,13 +1,14 @@
-"""Tests for Product Hunt platform."""
+"""Tests for Product Hunt platform (async v4)."""
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import httpx
+import pytest
 
-from promotion_agent.core.content import PromotionContent
-from promotion_agent.platforms.producthunt import ProductHuntPlatform
+from core.content import PromotionContent
+from platforms.producthunt import ProductHuntPlatform
 
 
 class MockConfig:
@@ -47,59 +48,69 @@ def test_adapt_content_tagline_truncation():
     assert payload["tagline"].endswith("...")
 
 
-def test_post_success(sample_content):
+@pytest.mark.asyncio
+async def test_post_success(sample_content):
     platform = ProductHuntPlatform(MockConfig())
-    mock_client = MagicMock()
-    mock_client.post.return_value = httpx.Response(
-        200,
-        json={
-            "data": {
-                "createPost": {
-                    "post": {
-                        "id": "ph_123",
-                        "slug": "test-project",
-                        "url": "https://www.producthunt.com/posts/test-project",
-                    },
-                    "errors": None,
-                }
+    mock_client = AsyncMock()
+
+    response = MagicMock()
+    response.is_success = True
+    response.json.return_value = {
+        "data": {
+            "createPost": {
+                "post": {
+                    "id": "ph_123",
+                    "slug": "test-project",
+                    "url": "https://www.producthunt.com/posts/test-project",
+                },
+                "errors": None,
             }
-        },
-    )
+        }
+    }
+    mock_client.post.return_value = response
     platform._client = mock_client
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is True
     assert "producthunt.com" in result.url
     assert result.post_id == "ph_123"
 
 
-def test_post_graphql_errors(sample_content):
+@pytest.mark.asyncio
+async def test_post_graphql_errors(sample_content):
     platform = ProductHuntPlatform(MockConfig())
-    mock_client = MagicMock()
-    mock_client.post.return_value = httpx.Response(
-        200,
-        json={
-            "data": {
-                "createPost": {
-                    "post": None,
-                    "errors": [{"field": "url", "message": "has already been taken"}],
-                }
+    mock_client = AsyncMock()
+
+    response = MagicMock()
+    response.is_success = True
+    response.json.return_value = {
+        "data": {
+            "createPost": {
+                "post": None,
+                "errors": [{"field": "url", "message": "has already been taken"}],
             }
-        },
-    )
+        }
+    }
+    mock_client.post.return_value = response
     platform._client = mock_client
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is False
     assert "already been taken" in result.error
 
 
-def test_post_http_failure(sample_content):
+@pytest.mark.asyncio
+async def test_post_http_failure(sample_content):
     platform = ProductHuntPlatform(MockConfig())
-    mock_client = MagicMock()
-    mock_client.post.return_value = httpx.Response(401, text="Unauthorized")
+    mock_client = AsyncMock()
+
+    response = MagicMock()
+    response.is_success = False
+    response.status_code = 401
+    response.text = "Unauthorized"
+    mock_client.post.return_value = response
     platform._client = mock_client
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is False
     assert "401" in result.error

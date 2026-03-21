@@ -1,9 +1,11 @@
-"""Tests for Reddit platform."""
+"""Tests for Reddit platform (async v4 with to_thread)."""
 
 from unittest.mock import MagicMock, patch
 
-from promotion_agent.core.content import PromotionContent
-from promotion_agent.platforms.reddit import RedditPlatform
+import pytest
+
+from core.content import PromotionContent
+from platforms.reddit import RedditPlatform
 
 
 class MockConfig:
@@ -11,8 +13,6 @@ class MockConfig:
     reddit_client_secret = "test_secret"
     reddit_username = "test_user"
     reddit_password = "test_pass"
-    reddit_user_agent = "test-agent:v0.1"
-    reddit_default_subreddit = "test"
 
 
 def test_validate_config():
@@ -26,8 +26,6 @@ def test_validate_config_missing():
         reddit_client_secret = None
         reddit_username = None
         reddit_password = None
-        reddit_user_agent = None
-        reddit_default_subreddit = "test"
 
     platform = RedditPlatform(Empty())
     assert platform.validate_config() is False
@@ -69,8 +67,9 @@ def test_title_truncation():
     assert len(payload["title"]) == 300
 
 
-@patch("promotion_agent.platforms.reddit.praw.Reddit")
-def test_post_success(mock_reddit_cls):
+@pytest.mark.asyncio
+@patch("platforms.reddit.praw.Reddit")
+async def test_post_success(mock_reddit_cls):
     mock_submission = MagicMock()
     mock_submission.permalink = "/r/test/comments/abc123/test/"
     mock_submission.id = "abc123"
@@ -87,14 +86,15 @@ def test_post_success(mock_reddit_cls):
         body="Test body",
         metadata={"reddit_subreddit": "test"},
     )
-    result = platform.post(content)
+    result = await platform.post(content)
     assert result.success is True
     assert "abc123" in result.url
     assert result.post_id == "abc123"
 
 
-@patch("promotion_agent.platforms.reddit.praw.Reddit")
-def test_post_failure(mock_reddit_cls):
+@pytest.mark.asyncio
+@patch("platforms.reddit.praw.Reddit")
+async def test_post_failure(mock_reddit_cls):
     mock_subreddit = MagicMock()
     mock_subreddit.submit.side_effect = Exception("Rate limited")
 
@@ -107,6 +107,6 @@ def test_post_failure(mock_reddit_cls):
         body="Body",
         metadata={"reddit_subreddit": "test"},
     )
-    result = platform.post(content)
+    result = await platform.post(content)
     assert result.success is False
     assert "Rate limited" in result.error

@@ -53,18 +53,25 @@ class TestPromotionSettings:
         assert settings.wechat_app_id == "wx123"
         assert settings.wechat_app_secret == "secret456"
 
-    def test_only_v4_fields_exist(self):
-        """v4 settings should NOT have v3-only fields like reddit, devto, etc."""
+    def test_v4_expanded_fields_exist(self):
+        """v4 settings should have all 18+ platform fields."""
         settings = PromotionSettings(_env_file=None)
-        assert not hasattr(settings, "reddit_client_id")
-        assert not hasattr(settings, "devto_api_key")
-        assert not hasattr(settings, "moltbook_api_key")
-        assert not hasattr(settings, "juejin_cookie")
-        assert not hasattr(settings, "csdn_cookie")
-        assert not hasattr(settings, "hn_username")
-        assert not hasattr(settings, "producthunt_token")
-        assert not hasattr(settings, "linkedin_access_token")
-        assert not hasattr(settings, "github_username")
+        # Legacy migrated fields now present
+        assert hasattr(settings, "reddit_client_id")
+        assert hasattr(settings, "devto_api_key")
+        assert hasattr(settings, "moltbook_api_key")
+        assert hasattr(settings, "juejin_cookie")
+        assert hasattr(settings, "csdn_cookie")
+        assert hasattr(settings, "hn_username")
+        assert hasattr(settings, "producthunt_token")
+        assert hasattr(settings, "linkedin_access_token")
+        # New platform fields
+        assert hasattr(settings, "medium_integration_token")
+        assert hasattr(settings, "hashnode_token")
+        assert hasattr(settings, "weibo_access_token")
+        assert hasattr(settings, "v2ex_token")
+        assert hasattr(settings, "segmentfault_cookie")
+        assert hasattr(settings, "oschina_cookie")
 
     def test_loads_from_env_file(self, tmp_path):
         """Settings can load from an .env file."""

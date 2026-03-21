@@ -1,15 +1,15 @@
-"""Tests for MoltBook platform."""
+"""Tests for MoltBook platform (async v4)."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import httpx
+import pytest
 
-from promotion_agent.platforms.moltbook import MoltBookPlatform
+from platforms.moltbook import MoltBookPlatform
 
 
 class MockConfig:
     moltbook_api_key = "test_key"
-    moltbook_default_submolt = "general"
 
 
 def test_validate_config():
@@ -20,7 +20,6 @@ def test_validate_config():
 def test_validate_config_missing():
     class EmptyConfig:
         moltbook_api_key = None
-        moltbook_default_submolt = "general"
 
     platform = MoltBookPlatform(EmptyConfig())
     assert platform.validate_config() is False
@@ -41,50 +40,61 @@ def test_adapt_content_custom_submolt(moltbook_content):
     assert payload["submolt"] == "ai-agents"
 
 
-def test_post_success(sample_content):
+@pytest.mark.asyncio
+async def test_post_success(sample_content):
     platform = MoltBookPlatform(MockConfig())
-    mock_client = MagicMock()
-    mock_client.post.return_value = httpx.Response(
-        200,
-        json={"id": "123", "url": "https://moltbook.com/posts/123"},
-    )
+    mock_client = AsyncMock()
+
+    response = MagicMock()
+    response.is_success = True
+    response.status_code = 200
+    response.json.return_value = {"id": "123", "url": "https://moltbook.com/posts/123"}
+    mock_client.post.return_value = response
     platform._client = mock_client
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is True
     assert result.url == "https://moltbook.com/posts/123"
     assert result.post_id == "123"
 
 
-def test_post_with_challenge(sample_content):
+@pytest.mark.asyncio
+async def test_post_with_challenge(sample_content):
     platform = MoltBookPlatform(MockConfig())
-    mock_client = MagicMock()
+    mock_client = AsyncMock()
 
-    # First call returns challenge, second call verifies
-    mock_client.post.side_effect = [
-        httpx.Response(
-            202,
-            json={"challenge": "initial velocity 10 cm/s, accelerate by 5 cm/s^2"},
-        ),
-        httpx.Response(
-            200,
-            json={"id": "456", "url": "https://moltbook.com/posts/456"},
-        ),
-    ]
+    challenge_resp = MagicMock()
+    challenge_resp.is_success = False
+    challenge_resp.status_code = 202
+    challenge_resp.json.return_value = {
+        "challenge": "initial velocity 10 cm/s, accelerate by 5 cm/s^2"
+    }
+
+    verify_resp = MagicMock()
+    verify_resp.is_success = True
+    verify_resp.json.return_value = {"id": "456", "url": "https://moltbook.com/posts/456"}
+
+    mock_client.post.side_effect = [challenge_resp, verify_resp]
     platform._client = mock_client
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is True
     assert result.post_id == "456"
 
 
-def test_post_failure(sample_content):
+@pytest.mark.asyncio
+async def test_post_failure(sample_content):
     platform = MoltBookPlatform(MockConfig())
-    mock_client = MagicMock()
-    mock_client.post.return_value = httpx.Response(403, text="Forbidden")
+    mock_client = AsyncMock()
+
+    response = MagicMock()
+    response.is_success = False
+    response.status_code = 403
+    response.text = "Forbidden"
+    mock_client.post.return_value = response
     platform._client = mock_client
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is False
     assert "403" in result.error
 

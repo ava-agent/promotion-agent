@@ -101,13 +101,15 @@ class TestServerImports:
     def test_app_is_fastmcp(self):
         assert hasattr(server_mod.app, "_tools")
 
-    def test_ten_tools_registered(self):
+    def test_twelve_tools_registered(self):
         tools = server_mod.app._tools
         expected = {
             "publish_zhihu",
             "publish_x",
             "publish_xiaohongshu",
             "publish_wechat",
+            "publish",
+            "submit_directory",
             "auth_status",
             "auth_set_cookie",
             "auth_qr_login",

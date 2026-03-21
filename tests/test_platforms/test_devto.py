@@ -1,11 +1,12 @@
-"""Tests for Dev.to platform."""
+"""Tests for Dev.to platform (async v4)."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import httpx
+import pytest
 
-from promotion_agent.core.content import PromotionContent
-from promotion_agent.platforms.devto import DevToPlatform
+from core.content import PromotionContent
+from platforms.devto import DevToPlatform
 
 
 class MockConfig:
@@ -46,29 +47,37 @@ def test_adapt_content_tags_limit():
     assert len(payload["article"]["tags"]) == 4
 
 
-def test_post_success(sample_content):
+@pytest.mark.asyncio
+async def test_post_success(sample_content):
     platform = DevToPlatform(MockConfig())
-    mock_client = MagicMock()
-    mock_client.post.return_value = httpx.Response(
-        201,
-        json={
-            "id": 789,
-            "url": "https://dev.to/kevinten10/test-project",
-        },
-    )
+    mock_client = AsyncMock()
+
+    response = MagicMock()
+    response.is_success = True
+    response.json.return_value = {
+        "id": 789,
+        "url": "https://dev.to/kevinten10/test-project",
+    }
+    mock_client.post.return_value = response
     platform._client = mock_client
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is True
     assert result.url == "https://dev.to/kevinten10/test-project"
 
 
-def test_post_failure(sample_content):
+@pytest.mark.asyncio
+async def test_post_failure(sample_content):
     platform = DevToPlatform(MockConfig())
-    mock_client = MagicMock()
-    mock_client.post.return_value = httpx.Response(422, text="Validation failed")
+    mock_client = AsyncMock()
+
+    response = MagicMock()
+    response.is_success = False
+    response.status_code = 422
+    response.text = "Validation failed"
+    mock_client.post.return_value = response
     platform._client = mock_client
 
-    result = platform.post(sample_content)
+    result = await platform.post(sample_content)
     assert result.success is False
     assert "422" in result.error

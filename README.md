@@ -1,8 +1,8 @@
 # promotion-agent
 
-Claude Code Plugin for multi-platform social media publishing.
+Claude Code Plugin for multi-platform content publishing via MCP.
 
-Supports: **知乎** · **掘金** · **CSDN** · **Dev.to** · **X/Twitter** · **LinkedIn** · **Reddit** · **Product Hunt** · **博客园** · **Hacker News** · **MoltBook**
+Supports **22 platforms**: **知乎** · **掘金** · **CSDN** · **小红书** · **微信公众号** · **微博** · **V2EX** · **SegmentFault** · **OSCHINA** · **博客园** · **X/Twitter** · **Medium** · **Hashnode** · **Dev.to** · **Reddit** · **LinkedIn** · **Product Hunt** · **Hacker News** · **MoltBook** + **AI Directories** (TAAFT · Futurepedia · Toolify)
 
 ## Installation
 
@@ -13,108 +13,81 @@ git clone https://github.com/ava-agent/promotion-agent ~/.claude/plugins/promoti
 # Install Python dependencies
 cd ~/.claude/plugins/promotion-agent
 pip install -e .
-
-# (可选) 安装 Playwright，用于掘金/CSDN的浏览器自动化兜底
-pip install playwright
-playwright install chromium
 ```
+
+Restart Claude Code after installation. The plugin loads automatically via `plugin.json`.
 
 ## Configuration
 
-Copy `.env.example` to `.env` and fill in your credentials:
-
 ```bash
+cd ~/.claude/plugins/promotion-agent
 cp .env.example .env
+# Fill in your platform credentials (see guides below)
 ```
 
-### Platform Status Overview
+## Platform Status
 
-| Platform | Auth Type | Publish Method | Stability |
-|----------|-----------|---------------|-----------|
-| 知乎 | Cookie | API | ⭐⭐⭐⭐⭐ Stable |
-| 掘金 | Cookie | API + Playwright fallback | ⭐⭐⭐⭐ Good |
-| CSDN | Cookie | API + Playwright fallback | ⭐⭐⭐⭐ Good |
-| Dev.to | API Key | API | ⭐⭐⭐⭐⭐ Stable |
-| LinkedIn | OAuth Token | API | ⭐⭐⭐⭐⭐ Stable |
-| Product Hunt | OAuth Token | API | ⭐⭐⭐⭐⭐ Stable |
-| X/Twitter | OAuth 1.0a | API | ⭐⭐⭐⭐⭐ Stable |
-| Reddit | OAuth 2.0 | API | ⭐⭐⭐⭐⭐ Stable |
-| 博客园 | API Token | MetaWeblog XML-RPC | ⭐⭐⭐⭐⭐ Stable |
-| MoltBook | API Key | API | ⭐⭐⭐⭐⭐ Stable |
-| Hacker News | Username+Password | Web scraping | ⭐⭐ Fragile |
+| Platform | Auth Type | Method | Stability |
+|----------|-----------|--------|-----------|
+| 知乎 | Cookie | API | Stable |
+| 掘金 | Cookie | API (draft + manual publish fallback) | Good |
+| CSDN | Cookie | API (WAF may block, manual fallback) | Limited |
+| 小红书 | QR Login | External MCP proxy | Stable |
+| 微信公众号 | AppID/Secret | External MCP proxy | Stable |
+| 微博 | OAuth 2.0 | API | Stable |
+| V2EX | Token | API | Stable |
+| SegmentFault | Cookie | API | Stable |
+| OSCHINA | Cookie | API | Stable |
+| 博客园 | API Token | MetaWeblog XML-RPC | Stable |
+| X/Twitter | OAuth 1.0a | API (tweepy) | Stable |
+| Medium | Integration Token | REST API v1 | Stable |
+| Hashnode | PAT | GraphQL | Stable |
+| Dev.to | API Key | REST API | Stable |
+| Reddit | OAuth 2.0 | API (praw) | Stable |
+| LinkedIn | OAuth 2.0 | REST API | Stable |
+| Product Hunt | Bearer Token | GraphQL | Stable |
+| Hacker News | Username/Password | Web form scraping | Fragile |
+| MoltBook | API Key | API | Stable |
+| TAAFT | None | Form submission | Best-effort |
+| Futurepedia | None | Form submission | Best-effort |
+| Toolify | None | Form submission | Best-effort |
 
 ---
 
-### Cookie-Based Platforms (知乎 / 掘金 / CSDN)
+## Credential Setup
 
-这三个平台使用浏览器 Cookie 认证，配置方式相同。
+### Cookie-Based Platforms (知乎 / 掘金 / CSDN / SegmentFault / OSCHINA)
 
-**方法一：自动提取（推荐）**
+These platforms use browser Cookie authentication.
 
+**Auto-extract (recommended):**
 ```bash
-# 确保已在 Chrome 中登录对应平台
+# Ensure you're logged in to the platform in Chrome
 python3 get_cookies.py
 ```
 
-脚本会自动从 Chrome/Edge/Firefox 提取 Cookie 并写入 `.env`。
-
-**方法二：手动提取**
-
-1. 在浏览器中登录平台
-2. 按 F12 打开开发者工具 → Network 标签
-3. 刷新页面，点击任意请求
-4. 复制 Request Headers 中的 `Cookie` 值
+**Manual extract:**
+1. Log in to the platform in your browser
+2. F12 → Network tab → refresh → click any request
+3. Copy the `Cookie` header value
 
 ```bash
-# .env
 PROMOTE_ZHIHU_COOKIE=_xsrf=xxx; z_c0=xxx; ...
 PROMOTE_JUEJIN_COOKIE=sessionid=xxx; ...
 PROMOTE_CSDN_COOKIE=UserName=xxx; uuid=xxx; ...
+PROMOTE_SEGMENTFAULT_COOKIE=...
+PROMOTE_OSCHINA_COOKIE=...
 ```
 
-> **Note**: Cookie 有效期通常 1-3 个月，过期后需重新提取。
-
-**掘金/CSDN Playwright 兜底**
-
-如果 API 发布失败（掘金"参数错误"或 CSDN 403），系统会自动尝试 Playwright 浏览器自动化。需要：
-
-```bash
-# 1. 安装 Playwright
-pip install playwright && playwright install chromium
-
-# 2. 启动 Chrome（复用登录态）
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
-    --remote-debugging-port=9222 \
-    --user-data-dir="/tmp/chrome_dev"
-
-# 3. 在打开的 Chrome 中登录掘金/CSDN，之后发布会自动通过浏览器完成
-```
-
----
-
-### Dev.to
-
-最简单的平台，1 分钟即可完成。
-
-1. 登录 [dev.to](https://dev.to)
-2. 进入 Settings → Account → 底部 "DEV Community API Keys"
-3. 输入名称，点击 "Generate API Key"
-4. 复制 Key
-
-```bash
-PROMOTE_DEVTO_API_KEY=your_api_key_here
-```
+> Cookies expire every 1-3 months. Re-extract when auth errors occur.
 
 ---
 
 ### X / Twitter
 
-需要 Twitter Developer 账号。
-
-1. 访问 [developer.x.com](https://developer.x.com)
-2. 创建 Project + App
-3. 在 App 设置中开启 OAuth 1.0a，权限设为 **Read and Write**
-4. 生成 Access Token & Secret
+1. Visit [developer.x.com](https://developer.x.com), create Project + App
+2. Enable OAuth 1.0a with **Read and Write** permissions
+3. Generate Access Token & Secret
 
 ```bash
 PROMOTE_X_CONSUMER_KEY=your_consumer_key
@@ -123,47 +96,71 @@ PROMOTE_X_ACCESS_TOKEN=your_access_token
 PROMOTE_X_ACCESS_TOKEN_SECRET=your_access_token_secret
 ```
 
-> 需要安装 `tweepy`: `pip install tweepy`
+---
+
+### Medium
+
+1. Visit [medium.com/me/settings/security](https://medium.com/me/settings/security)
+2. Generate an Integration Token
+
+```bash
+PROMOTE_MEDIUM_INTEGRATION_TOKEN=your_token
+```
+
+---
+
+### Hashnode
+
+1. Visit [hashnode.com/settings/developer](https://hashnode.com/settings/developer)
+2. Generate a Personal Access Token
+
+```bash
+PROMOTE_HASHNODE_TOKEN=your_token
+PROMOTE_HASHNODE_PUBLICATION_ID=your_pub_id  # Optional, auto-discovered if omitted
+```
+
+---
+
+### Dev.to
+
+1. Visit [dev.to/settings/extensions](https://dev.to/settings/extensions)
+2. Generate a DEV Community API Key
+
+```bash
+PROMOTE_DEVTO_API_KEY=your_api_key
+```
 
 ---
 
 ### LinkedIn
 
-需要 LinkedIn Developer 应用。
-
-1. 访问 [linkedin.com/developers](https://www.linkedin.com/developers)
-2. 创建一个 App，关联 Company Page
-3. 在 Products 中申请 **Share on LinkedIn** 权限
-4. 通过 OAuth 2.0 获取 Access Token（使用 `w_member_social` scope）
+1. Visit [linkedin.com/developers](https://www.linkedin.com/developers), create an App
+2. Request **Share on LinkedIn** permission
+3. Obtain an OAuth 2.0 Access Token (scope: `w_member_social`)
 
 ```bash
 PROMOTE_LINKEDIN_ACCESS_TOKEN=your_access_token
 ```
 
-> **Note**: Token 有效期 60 天，过期后需重新获取。
+> Token expires in 60 days. Re-obtain when expired.
 
 ---
 
 ### Product Hunt
 
-1. 访问 [Product Hunt API Dashboard](https://www.producthunt.com/v2/oauth/applications)
-2. 创建应用，获取 API Token
+1. Visit [Product Hunt API Dashboard](https://www.producthunt.com/v2/oauth/applications)
+2. Create application, get API Token
 
 ```bash
-PROMOTE_PRODUCTHUNT_TOKEN=your_token_here
+PROMOTE_PRODUCTHUNT_TOKEN=your_token
 ```
 
 ---
 
 ### Reddit
 
-需要 Reddit API 应用。
-
-1. 访问 [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps)
-2. 点击 "create another app..."
-3. 类型选 **script**
-4. redirect uri 填 `http://localhost:8080`
-5. 记下 client ID（app 名下方那串字符）和 secret
+1. Visit [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps)
+2. Create a **script** type app (redirect: `http://localhost:8080`)
 
 ```bash
 PROMOTE_REDDIT_CLIENT_ID=your_client_id
@@ -172,18 +169,12 @@ PROMOTE_REDDIT_USERNAME=your_username
 PROMOTE_REDDIT_PASSWORD=your_password
 ```
 
-> 需要安装 `praw`: `pip install praw`
-
 ---
 
 ### 博客园 (CNBlogs)
 
-使用 MetaWeblog XML-RPC 协议。
-
-1. 登录 [博客园](https://www.cnblogs.com)
-2. 进入 [设置页面](https://i.cnblogs.com/settings)
-3. 勾选 "允许 MetaWeblog 博客客户端访问"
-4. 生成 API Token
+1. Visit [cnblogs.com settings](https://i.cnblogs.com/settings)
+2. Enable MetaWeblog access and generate API Token
 
 ```bash
 PROMOTE_CNBLOGS_BLOG_URL=https://www.cnblogs.com/your-blog-name
@@ -195,14 +186,12 @@ PROMOTE_CNBLOGS_TOKEN=your_api_token
 
 ### Hacker News
 
-直接使用 HN 账号密码（通过网页表单提交，不太稳定）。
-
 ```bash
 PROMOTE_HN_USERNAME=your_username
 PROMOTE_HN_PASSWORD=your_password
 ```
 
-> ⚠️ 该平台通过 HTML 表单爬取实现，无官方 API，可能因网页结构变化失效。
+> Uses web form scraping (no official API). May break if HN changes its HTML.
 
 ---
 
@@ -210,222 +199,162 @@ PROMOTE_HN_PASSWORD=your_password
 
 ```bash
 PROMOTE_MOLTBOOK_API_KEY=your_api_key
-# 可选：指定默认 submolt
-PROMOTE_MOLTBOOK_DEFAULT_SUBMOLT=general
 ```
 
 ---
 
-## How It Works — Architecture
+### 微博 (Weibo)
 
-本项目是一个 **Claude Code Plugin**，内嵌了一个 **MCP Server**。两者协同工作：
+Requires a Weibo Open Platform app (needs approval).
+
+```bash
+PROMOTE_WEIBO_ACCESS_TOKEN=your_access_token
+```
+
+> Token expires in ~30 days.
+
+---
+
+### V2EX
+
+1. Visit [v2ex.com/settings/tokens](https://www.v2ex.com/settings/tokens)
+2. Generate a Personal Access Token
+
+```bash
+PROMOTE_V2EX_TOKEN=your_token
+```
+
+---
+
+### 微信公众号 (WeChat)
+
+```bash
+PROMOTE_WECHAT_APP_ID=your_app_id
+PROMOTE_WECHAT_APP_SECRET=your_app_secret
+```
+
+---
+
+### 小红书 (Xiaohongshu)
+
+Auth managed by external MCP proxy. Use `auth_qr_login` tool to scan QR code.
+
+---
+
+### AI Directories (TAAFT / Futurepedia / Toolify)
+
+No authentication required. Submissions are HTTP form posts.
+
+---
+
+## Architecture
+
+This project is a **Claude Code Plugin** embedding an **MCP Server**.
 
 ![promotion-agent Architecture](docs/images/architecture.png)
 
-**核心组件**：
+| Layer | Component | Purpose |
+|-------|-----------|---------|
+| **Interaction** | Skills (`/publish`) | Guide user through publish flow: select platforms, preview, confirm, publish |
+| **Automation** | Agents (`publisher`) | Read content files, split by platform, batch publish, report results |
+| **Security** | Hooks (`auth-check`) | `PreToolUse` intercept on all `publish*` calls — validate auth before publishing |
+| **Execution** | MCP Server (`server.py`) | 12 tools, launched as subprocess via `plugin.json` |
+| **Platform** | Platform classes | Each platform implements `adapt_content()` + `post()` + `health_check()` |
 
-| 层级 | 组件 | 作用 |
-|------|------|------|
-| **交互层** | Skills (`/publish`) | 引导用户完成发布流程：选平台 → 预览 → 确认 → 发布 |
-| **自动化层** | Agents (`publisher`) | 读取内容文件，按平台拆分，批量发布，输出汇总 |
-| **安全层** | Hooks (`auth-check`) | `PreToolUse` 拦截所有 `publish_*` 调用，发布前自动验证认证 |
-| **执行层** | MCP Server (`server.py`) | 10 个工具，通过 `plugin.json` 作为子进程启动 |
-| **平台层** | Platform classes | 每个平台独立实现 `adapt_content()` + `post()` |
+## MCP Tools Reference
 
----
+### Publish Tools (6)
 
-## Usage in Claude Code — 使用指南
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `publish_zhihu` | Publish to Zhihu column | `title`, `body`, `column?`, `topics?`, `dry_run?` |
+| `publish_x` | Tweet or thread on X | `text`, `thread?`, `url?`, `hashtags?`, `dry_run?` |
+| `publish_xiaohongshu` | Post to Xiaohongshu | `title`, `body`, `images?`, `tags?`, `dry_run?` |
+| `publish_wechat` | Publish to WeChat | `title`, `body`, `cover_image?`, `digest?`, `dry_run?` |
+| `publish` | **Generic** — any of 18 platforms | `platform`, `title`, `body`, `tags?`, `url?`, `metadata?`, `dry_run?` |
+| `submit_directory` | Submit to AI directory | `directory`, `name`, `url`, `description`, `category?`, `pricing?`, `dry_run?` |
 
-### Step 1: Install the Plugin
+> All publish tools support `dry_run: true` for preview without posting.
 
-```bash
-# 克隆到 Claude Code 插件目录
-git clone https://github.com/ava-agent/promotion-agent ~/.claude/plugins/promotion-agent
+### Auth Tools (4)
 
-# 安装依赖
-cd ~/.claude/plugins/promotion-agent
-pip install -e .
+| Tool | Description |
+|------|-------------|
+| `auth_status` | Show auth status for all platforms |
+| `auth_set_cookie` | Save a cookie to .env (`platform`, `cookie`) |
+| `auth_qr_login` | QR code login for Xiaohongshu |
+| `auth_health_check` | Verify credentials are valid (`platform`) |
+
+### Utility Tools (2)
+
+| Tool | Description |
+|------|-------------|
+| `list_platforms` | List all platforms with auth status |
+| `preview_content` | Preview content adaptation per platform (`title`, `body`, `platforms?`) |
+
+## Usage in Claude Code
+
+### Natural Language
+
+```
+> Publish this article to Zhihu
+> Post README.md to Dev.to and Medium
+> Share this to all configured platforms
 ```
 
-安装后，**重启 Claude Code**，插件会自动被加载（通过 `plugin.json`）。
-
-### Step 2: Configure Credentials
-
-```bash
-cd ~/.claude/plugins/promotion-agent
-cp .env.example .env
-# 编辑 .env，填入你的平台凭证（参考上方各平台配置指南）
-```
-
-### Step 3: Start Using
-
-安装配置完成后，在 Claude Code 中有 **三种使用方式**：
-
-#### 方式一：自然语言（最简单）
-
-直接用自然语言告诉 Claude 你想发布什么：
-
-```
-> 帮我把这篇文章发到知乎
-
-> Publish this markdown file to Dev.to
-
-> 把 README.md 发布到掘金和 CSDN
-
-> 发布到所有已配置的平台
-```
-
-Claude 会自动调用 MCP 工具完成发布。
-
-#### 方式二：/publish Skill（交互式引导）
+### /publish Skill (Interactive)
 
 ```
 > /publish
 ```
 
-`/publish` 技能会引导你完成完整流程：
+Guides you through: identify content, select platforms, check auth, preview, confirm, publish.
 
-1. **识别内容来源** — 读取文件或使用对话上下文
-2. **选择目标平台** — 展示可用平台列表
-3. **检查认证状态** — 自动验证凭证是否有效
-4. **预览适配内容** — 展示各平台的适配结果（`dry_run` 模式）
-5. **确认并发布** — 逐平台发布并报告结果
+For `*-社媒版.md` files, auto-splits by `## ` headings into per-platform content.
 
-如果你的内容文件命名为 `*-社媒版.md`，技能会按 `## ` 标题自动拆分为各平台版本：
-
-```markdown
-## 知乎
-知乎版本的内容...
-
-## X
-1/3 First tweet...
-2/3 Second tweet...
-3/3 Third tweet...
-
-## 微信公众号
-公众号版本的内容...
-```
-
-#### 方式三：Publisher Agent（批量自动发布）
-
-当你需要一次性发布到多个平台时，Claude 会自动调度 **publisher** 子代理：
+### Publisher Agent (Batch)
 
 ```
-> 把这篇文章批量发布到所有平台
+> Batch publish this to all platforms
 ```
 
-Publisher Agent 的工作流程：
-1. 读取内容，按平台拆分（如有）
-2. 调用 `auth_status` 验证凭证
-3. 对每个平台执行 `dry_run` 预览
-4. 等待确认后逐平台发布
-5. 输出汇总表格（平台 | 状态 | URL | 错误信息）
-
----
-
-## MCP Tools Reference
-
-插件通过 MCP Server 暴露以下工具，Claude 会自动调用：
-
-### Publish Tools
-
-| Tool | Description | Parameters |
-|------|-------------|------------|
-| `publish_zhihu` | 发布到知乎专栏 | `title`, `body`, `column?`, `topics?`, `dry_run?` |
-| `publish_x` | 发推文（支持 Thread） | `text`, `thread?`, `url?`, `hashtags?`, `dry_run?` |
-| `publish_xiaohongshu` | 发布小红书笔记 | `title`, `body`, `images?`, `tags?`, `dry_run?` |
-| `publish_wechat` | 发布微信公众号文章 | `title`, `body`, `cover_image?`, `digest?`, `dry_run?` |
-
-> 所有 publish 工具都支持 `dry_run: true` 参数，用于预览适配结果而不实际发布。
-
-### Auth Tools
-
-| Tool | Description | Parameters |
-|------|-------------|------------|
-| `auth_status` | 查看所有平台认证状态 | — |
-| `auth_set_cookie` | 设置平台 Cookie | `platform`, `cookie` |
-| `auth_qr_login` | 小红书扫码登录 | — |
-| `auth_health_check` | 验证平台认证有效性 | `platform` |
-
-### Utility Tools
-
-| Tool | Description | Parameters |
-|------|-------------|------------|
-| `list_platforms` | 列出所有平台及认证状态 | — |
-| `preview_content` | 预览内容在各平台的适配结果 | `title`, `body`, `platforms?` |
-
----
-
-## Examples
-
-### Example 1: 发布 Markdown 文件到知乎
-
-```
-> 读取 docs/my-article.md，发布到知乎
-```
-
-Claude 会：读取文件 → 调用 `publish_zhihu(dry_run=true)` 预览 → 确认后调用 `publish_zhihu(dry_run=false)` 发布 → 返回文章 URL。
-
-### Example 2: 检查认证状态
-
-```
-> 检查一下哪些平台已经配置好了
-```
-
-Claude 会调用 `auth_status` 和 `list_platforms` 工具，展示所有平台的认证状态。
-
-### Example 3: 设置 Cookie
-
-```
-> 帮我设置知乎的 Cookie：_xsrf=xxx; z_c0=xxx; ...
-```
-
-Claude 会调用 `auth_set_cookie(platform="zhihu", cookie="...")` 自动保存到 `.env`。
-
-### Example 4: 批量发布到多个平台
-
-```
-> 把 release-notes-社媒版.md 发布到知乎、X 和微信公众号
-```
-
-Claude 会按标题拆分内容，逐平台适配和发布，最后输出汇总表格。
-
----
+Autonomous agent: reads content, checks auth, previews all, waits for confirmation, publishes sequentially, reports summary table.
 
 ## Troubleshooting
 
 ### Plugin not loaded
 
-确保插件在正确的目录：
 ```bash
-ls ~/.claude/plugins/promotion-agent/plugin.json
+ls ~/.claude/plugins/promotion-agent/plugin.json  # Must exist
+# Restart Claude Code
 ```
-重启 Claude Code 后插件会自动加载。
 
 ### MCP Server not starting
 
-检查 Python 依赖：
 ```bash
 cd ~/.claude/plugins/promotion-agent
 pip install -e .
-python server.py  # 应该正常启动，等待 stdio 输入
+python server.py  # Should start and wait for stdio input
 ```
 
 ### Cookie expired
 
-Cookie 通常 1-3 个月后过期，报错信息会提示重新配置：
+Cookies expire every 1-3 months. Re-extract:
 ```bash
-python3 get_cookies.py  # 重新提取
+python3 get_cookies.py
 ```
 
-### Juejin/CSDN API 403
+### Juejin API "parameter error"
 
-掘金和 CSDN 的 API 可能被平台 WAF 拦截，系统会自动尝试 Playwright 浏览器兜底。确保：
-```bash
-pip install playwright && playwright install chromium
-# 启动 Chrome 并登录对应平台
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
-```
+Juejin's publish API may reject requests. The system creates a draft — visit [juejin.cn/editor/drafts](https://juejin.cn/editor/drafts) to publish manually.
+
+### CSDN 403 Forbidden
+
+CSDN's WAF may block API calls. Use the CSDN web editor to publish manually when this occurs.
+
+### Auth hook blocking calls
+
+If `publish` calls are blocked, run `auth_status` to see what's missing, then configure the required credentials.
 
 ## License
 

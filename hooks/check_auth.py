@@ -18,10 +18,21 @@ def main():
 
     tool_name = data.get("tool_name", "")
 
-    # Extract platform from tool name: mcp__promotion-agent__publish_zhihu → zhihu
-    if "publish_" not in tool_name:
+    # Directory submissions don't need auth
+    if "submit_directory" in tool_name:
         sys.exit(0)
-    platform = tool_name.split("publish_")[-1]
+
+    # Extract platform name from tool name
+    # Case 1: publish_zhihu, publish_x, etc. (dedicated tools)
+    # Case 2: publish (generic tool) — read platform from input
+    if "publish_" in tool_name:
+        platform = tool_name.split("publish_")[-1]
+    elif tool_name.endswith("__publish"):
+        platform = data.get("input", {}).get("platform", "")
+        if not platform:
+            sys.exit(0)  # Can't determine platform — don't block
+    else:
+        sys.exit(0)
 
     checks = {
         "zhihu": [("PROMOTE_ZHIHU_COOKIE", "知乎 Cookie")],
@@ -36,6 +47,35 @@ def main():
             ("PROMOTE_WECHAT_APP_SECRET", "WeChat App Secret"),
         ],
         "xiaohongshu": [],  # Auth managed by external MCP
+        # Legacy migrated
+        "juejin": [("PROMOTE_JUEJIN_COOKIE", "掘金 Cookie")],
+        "csdn": [("PROMOTE_CSDN_COOKIE", "CSDN Cookie")],
+        "devto": [("PROMOTE_DEVTO_API_KEY", "Dev.to API Key")],
+        "reddit": [
+            ("PROMOTE_REDDIT_CLIENT_ID", "Reddit Client ID"),
+            ("PROMOTE_REDDIT_CLIENT_SECRET", "Reddit Client Secret"),
+            ("PROMOTE_REDDIT_USERNAME", "Reddit Username"),
+            ("PROMOTE_REDDIT_PASSWORD", "Reddit Password"),
+        ],
+        "linkedin": [("PROMOTE_LINKEDIN_ACCESS_TOKEN", "LinkedIn Access Token")],
+        "producthunt": [("PROMOTE_PRODUCTHUNT_TOKEN", "Product Hunt Token")],
+        "cnblogs": [
+            ("PROMOTE_CNBLOGS_BLOG_URL", "CNBlogs Blog URL"),
+            ("PROMOTE_CNBLOGS_USERNAME", "CNBlogs Username"),
+            ("PROMOTE_CNBLOGS_TOKEN", "CNBlogs Token"),
+        ],
+        "hackernews": [
+            ("PROMOTE_HN_USERNAME", "HN Username"),
+            ("PROMOTE_HN_PASSWORD", "HN Password"),
+        ],
+        "moltbook": [("PROMOTE_MOLTBOOK_API_KEY", "MoltBook API Key")],
+        # New platforms
+        "medium": [("PROMOTE_MEDIUM_INTEGRATION_TOKEN", "Medium Integration Token")],
+        "hashnode": [("PROMOTE_HASHNODE_TOKEN", "Hashnode Token")],
+        "weibo": [("PROMOTE_WEIBO_ACCESS_TOKEN", "Weibo Access Token")],
+        "v2ex": [("PROMOTE_V2EX_TOKEN", "V2EX Token")],
+        "segmentfault": [("PROMOTE_SEGMENTFAULT_COOKIE", "SegmentFault Cookie")],
+        "oschina": [("PROMOTE_OSCHINA_COOKIE", "OSCHINA Cookie")],
     }
 
     required = checks.get(platform, [])

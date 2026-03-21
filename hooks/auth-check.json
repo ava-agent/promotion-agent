@@ -4,6 +4,11 @@
       "event": "PreToolUse",
       "matcher": "mcp__promotion-agent__publish_*",
       "command": "python ${CLAUDE_PLUGIN_ROOT}/hooks/check_auth.py"
+    },
+    {
+      "event": "PreToolUse",
+      "matcher": "mcp__promotion-agent__publish",
+      "command": "python ${CLAUDE_PLUGIN_ROOT}/hooks/check_auth.py"
     }
   ]
 }

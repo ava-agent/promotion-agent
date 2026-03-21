@@ -6,18 +6,14 @@ Authentication: Cookie-based (from browser login session).
 
 from __future__ import annotations
 
-from typing import Optional
-
-import httpx
-
-from core.base_platform import BasePlatform
+from core.base_platform import BaseHttpPlatform
 from core.content import PromotionContent
 from core.registry import register_platform
 from core.result import PostResult
 
 
 @register_platform
-class ZhihuPlatform(BasePlatform):
+class ZhihuPlatform(BaseHttpPlatform):
     PLATFORM_NAME = "zhihu"
     DISPLAY_NAME = "知乎"
     REQUIRED_CONFIG_KEYS = ["zhihu_cookie"]
@@ -26,25 +22,19 @@ class ZhihuPlatform(BasePlatform):
 
     def __init__(self, config):
         self.cookie = getattr(config, "zhihu_cookie", None)
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client = None
 
-    @property
-    def client(self) -> httpx.AsyncClient:
-        if self._client is None:
-            self._client = httpx.AsyncClient(
-                headers={
-                    "Content-Type": "application/json",
-                    "Cookie": self.cookie or "",
-                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) "
-                    "Chrome/120.0.0.0 Safari/537.36",
-                    "Origin": "https://zhuanlan.zhihu.com",
-                    "Referer": "https://zhuanlan.zhihu.com/write",
-                    "X-Requested-With": "XMLHttpRequest",
-                },
-                timeout=30.0,
-            )
-        return self._client
+    def _default_headers(self) -> dict[str, str]:
+        return {
+            "Content-Type": "application/json",
+            "Cookie": self.cookie or "",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0.0.0 Safari/537.36",
+            "Origin": "https://zhuanlan.zhihu.com",
+            "Referer": "https://zhuanlan.zhihu.com/write",
+            "X-Requested-With": "XMLHttpRequest",
+        }
 
     def validate_config(self) -> bool:
         return bool(self.cookie)
@@ -64,7 +54,7 @@ class ZhihuPlatform(BasePlatform):
             "column": column,
         }
 
-    async def _create_draft(self, adapted: dict) -> Optional[str]:
+    async def _create_draft(self, adapted: dict) -> str | None:
         """Step 1: Create a draft article."""
         resp = await self.client.post(
             f"{self.BASE_URL}/articles/drafts",

@@ -1,9 +1,15 @@
-"""promotion-agent MCP Server — 10 tools for social media publishing.
+"""promotion-agent MCP Server — 12 tools for social media publishing.
 
 Tools:
-  Publish (4): publish_zhihu, publish_x, publish_xiaohongshu, publish_wechat
+  Publish (6): publish_zhihu, publish_x, publish_xiaohongshu, publish_wechat,
+               publish (generic), submit_directory
   Auth (4):    auth_status, auth_set_cookie, auth_qr_login, auth_health_check
   Utility (2): list_platforms, preview_content
+
+Platforms (18): zhihu, x, xiaohongshu, wechat, juejin, csdn, devto, reddit,
+  linkedin, producthunt, cnblogs, hackernews, moltbook, medium, hashnode,
+  weibo, v2ex, segmentfault, oschina
+AI Directories (3): taaft, futurepedia, toolify
 
 Requires: pip install mcp  (Python 3.10+)
 Run:      python server.py          (stdio transport)
@@ -23,10 +29,31 @@ from core.content import ContentFormat, PromotionContent
 from core.settings import PromotionSettings
 
 # Import platforms to trigger @register_platform decorators
-import platforms.zhihu  # noqa: F401
-import platforms.x_twitter  # noqa: F401
+import platforms.zhihu        # noqa: F401
+import platforms.x_twitter    # noqa: F401
 import platforms.xiaohongshu  # noqa: F401
-import platforms.wechat  # noqa: F401
+import platforms.wechat       # noqa: F401
+# Legacy migrated
+import platforms.juejin       # noqa: F401
+import platforms.csdn         # noqa: F401
+import platforms.devto        # noqa: F401
+import platforms.reddit       # noqa: F401
+import platforms.linkedin     # noqa: F401
+import platforms.producthunt  # noqa: F401
+import platforms.cnblogs      # noqa: F401
+import platforms.hackernews   # noqa: F401
+import platforms.moltbook     # noqa: F401
+# New platforms
+import platforms.medium       # noqa: F401
+import platforms.hashnode      # noqa: F401
+import platforms.weibo        # noqa: F401
+import platforms.v2ex         # noqa: F401
+import platforms.segmentfault  # noqa: F401
+import platforms.oschina      # noqa: F401
+# AI directories
+import platforms.taaft        # noqa: F401
+import platforms.futurepedia  # noqa: F401
+import platforms.toolify      # noqa: F401
 
 from core.registry import get_platform, list_platforms as registry_list_platforms
 
@@ -39,6 +66,16 @@ app = FastMCP("promotion-agent")
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+ALL_PLATFORMS = [
+    "zhihu", "x", "xiaohongshu", "wechat",
+    "juejin", "csdn", "devto", "reddit", "linkedin",
+    "producthunt", "cnblogs", "hackernews", "moltbook",
+    "medium", "hashnode", "weibo", "v2ex",
+    "segmentfault", "oschina",
+]
+
+DIRECTORY_PLATFORMS = ["taaft", "futurepedia", "toolify"]
 
 
 def _settings() -> PromotionSettings:
@@ -57,8 +94,30 @@ def _auth_manager() -> AuthManager:
     return AuthManager(_settings(), env_file_path=_env_file_path())
 
 
+async def _do_publish(
+    platform_name: str,
+    content: PromotionContent,
+    dry_run: bool,
+) -> dict:
+    """Shared publish logic: instantiate platform, adapt, optionally post."""
+    settings = _settings()
+    try:
+        platform_cls = get_platform(platform_name)
+    except KeyError:
+        return {"error": f"Unknown platform: {platform_name}. Use list_platforms to see available options."}
+
+    instance = platform_cls(settings)
+    adapted = instance.adapt_content(content)
+
+    if dry_run:
+        return {"dry_run": True, "platform": platform_name, "adapted": adapted}
+
+    result = await instance.post(content)
+    return asdict(result)
+
+
 # ---------------------------------------------------------------------------
-# Publish tools (4)
+# Publish tools — original 4 (backward compatible)
 # ---------------------------------------------------------------------------
 
 
@@ -79,25 +138,13 @@ async def publish_zhihu(
         topics: List of topic strings (optional).
         dry_run: If True, return adapted content without posting.
     """
-    topics = topics or []
-    settings = _settings()
-    platform_cls = get_platform("zhihu")
-    platform = platform_cls(settings)
-
     content = PromotionContent(
         title=title,
         body=body,
         format=ContentFormat.MARKDOWN,
-        metadata={"zhihu_column": column, "zhihu_topics": topics},
+        metadata={"zhihu_column": column, "zhihu_topics": topics or []},
     )
-
-    adapted = platform.adapt_content(content)
-
-    if dry_run:
-        return {"dry_run": True, "platform": "zhihu", "adapted": adapted}
-
-    result = await platform.post(content)
-    return asdict(result)
+    return await _do_publish("zhihu", content, dry_run)
 
 
 @app.tool()
@@ -117,12 +164,6 @@ async def publish_x(
         hashtags: List of hashtag strings (without #).
         dry_run: If True, return adapted content without posting.
     """
-    thread = thread or []
-    hashtags = hashtags or []
-    settings = _settings()
-    platform_cls = get_platform("x")
-    platform = platform_cls(settings)
-
     metadata = {}
     if thread:
         metadata["thread"] = thread
@@ -131,18 +172,11 @@ async def publish_x(
         title=text,
         body=text,
         format=ContentFormat.PLAIN,
-        tags=hashtags,
+        tags=hashtags or [],
         url=url or None,
         metadata=metadata,
     )
-
-    adapted = platform.adapt_content(content)
-
-    if dry_run:
-        return {"dry_run": True, "platform": "x", "adapted": adapted}
-
-    result = await platform.post(content)
-    return asdict(result)
+    return await _do_publish("x", content, dry_run)
 
 
 @app.tool()
@@ -162,27 +196,14 @@ async def publish_xiaohongshu(
         tags: List of tag strings.
         dry_run: If True, return adapted content without posting.
     """
-    images = images or []
-    tags = tags or []
-    settings = _settings()
-    platform_cls = get_platform("xiaohongshu")
-    platform = platform_cls(settings)
-
     content = PromotionContent(
         title=title,
         body=body,
         format=ContentFormat.MARKDOWN,
-        tags=tags,
-        metadata={"images": images},
+        tags=tags or [],
+        metadata={"images": images or []},
     )
-
-    adapted = platform.adapt_content(content)
-
-    if dry_run:
-        return {"dry_run": True, "platform": "xiaohongshu", "adapted": adapted}
-
-    result = await platform.post(content)
-    return asdict(result)
+    return await _do_publish("xiaohongshu", content, dry_run)
 
 
 @app.tool()
@@ -202,10 +223,6 @@ async def publish_wechat(
         digest: Article digest/summary (optional, defaults to body[:120]).
         dry_run: If True, return adapted content without posting.
     """
-    settings = _settings()
-    platform_cls = get_platform("wechat")
-    platform = platform_cls(settings)
-
     metadata = {}
     if cover_image:
         metadata["cover_image"] = cover_image
@@ -218,14 +235,103 @@ async def publish_wechat(
         format=ContentFormat.MARKDOWN,
         metadata=metadata,
     )
+    return await _do_publish("wechat", content, dry_run)
 
-    adapted = platform.adapt_content(content)
 
-    if dry_run:
-        return {"dry_run": True, "platform": "wechat", "adapted": adapted}
+# ---------------------------------------------------------------------------
+# Generic publish tool (covers all 18 platforms)
+# ---------------------------------------------------------------------------
 
-    result = await platform.post(content)
-    return asdict(result)
+
+@app.tool()
+async def publish(
+    platform: str,
+    title: str,
+    body: str,
+    tags: Optional[list[str]] = None,
+    url: str = "",
+    description: str = "",
+    metadata: Optional[dict] = None,
+    dry_run: bool = False,
+) -> dict:
+    """Publish content to any supported platform.
+
+    Use this for platforms beyond the original four (zhihu, x, xiaohongshu, wechat).
+    Supports: juejin, csdn, devto, reddit, linkedin, producthunt, cnblogs,
+    hackernews, moltbook, medium, hashnode, weibo, v2ex, segmentfault, oschina.
+    Also works with the original four platforms.
+
+    Args:
+        platform: Platform identifier (e.g. "devto", "medium", "juejin").
+        title: Content title.
+        body: Content body (usually Markdown).
+        tags: List of tag strings.
+        url: Project/canonical URL to include.
+        description: Short description/summary.
+        metadata: Platform-specific options. Examples:
+            reddit: {"reddit_subreddit": "python", "reddit_link_post": true}
+            juejin: {"juejin_category_id": "...", "juejin_tag_ids": [...]}
+            v2ex: {"v2ex_node": "share"}
+            medium: {"medium_status": "draft"}
+            hashnode: (uses PROMOTE_HASHNODE_PUBLICATION_ID from env)
+        dry_run: If True, return adapted content without posting.
+    """
+    content = PromotionContent(
+        title=title,
+        body=body,
+        format=ContentFormat.MARKDOWN,
+        tags=tags or [],
+        url=url or None,
+        description=description or None,
+        metadata=metadata or {},
+    )
+    return await _do_publish(platform, content, dry_run)
+
+
+# ---------------------------------------------------------------------------
+# AI Directory submission tool
+# ---------------------------------------------------------------------------
+
+
+@app.tool()
+async def submit_directory(
+    directory: str,
+    name: str,
+    url: str,
+    description: str,
+    category: str = "",
+    pricing: str = "",
+    dry_run: bool = False,
+) -> dict:
+    """Submit an AI tool to a directory listing site.
+
+    Supported directories: taaft (There's An AI For That), futurepedia, toolify.
+
+    Args:
+        directory: Directory identifier (taaft, futurepedia, toolify).
+        name: Tool/product name.
+        url: Tool URL.
+        description: Tool description (max 500 chars).
+        category: Tool category (optional).
+        pricing: Pricing model (e.g. "free", "freemium", "paid").
+        dry_run: If True, return adapted content without submitting.
+    """
+    content = PromotionContent(
+        title=name,
+        body=description,
+        description=description,
+        url=url or None,
+        metadata={
+            "directory_category": category,
+            "directory_pricing": pricing,
+        },
+    )
+
+    result = await _do_publish(directory, content, dry_run)
+    # Rename "platform" key to "directory" for directory results
+    if "platform" in result:
+        result["directory"] = result.pop("platform")
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -246,7 +352,7 @@ async def auth_set_cookie(platform: str, cookie: str) -> dict:
     """Write a cookie value to the env file for a platform.
 
     Args:
-        platform: Platform name (e.g. 'zhihu').
+        platform: Platform name (e.g. 'zhihu', 'juejin', 'csdn', 'segmentfault', 'oschina').
         cookie: The cookie string to store.
     """
     try:
@@ -280,7 +386,7 @@ async def auth_health_check(platform: str) -> dict:
     """Verify that credentials for a platform are still valid.
 
     Args:
-        platform: Platform name to check (zhihu, x, xiaohongshu, wechat).
+        platform: Platform name to check (any of the 18 supported platforms).
     """
     settings = _settings()
     try:
@@ -329,9 +435,11 @@ async def list_platforms() -> list[dict]:
     result = []
     for name, cls in registry.items():
         auth = statuses.get(name)
+        is_directory = name in DIRECTORY_PLATFORMS
         result.append({
             "name": name,
             "display_name": cls.DISPLAY_NAME,
+            "type": "directory" if is_directory else "platform",
             "auth": asdict(auth) if auth else {"configured": False, "valid": False},
         })
     return result
@@ -350,7 +458,7 @@ async def preview_content(
         body: Content body.
         platforms: List of platform names to preview. If None, preview all.
     """
-    platforms = platforms or ["zhihu", "x", "xiaohongshu", "wechat"]
+    platforms = platforms or ALL_PLATFORMS
     settings = _settings()
     result = {}
 
