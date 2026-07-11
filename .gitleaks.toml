@@ -1,0 +1,10 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Ignore local credentials and generated dependency/cache files"
+paths = [
+  '''^\.env$''',
+  '''(^|/)__pycache__/''',
+  '''^node_modules/''',
+]

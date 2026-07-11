@@ -1,8 +1,12 @@
 {
   "name": "promotion-agent",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "private": true,
   "scripts": {
+    "dev": "npm run docs:dev",
+    "build": "npm run docs:build",
+    "test": "python3 -m pytest",
+    "lint": "python3 -m compileall server.py auth core platforms",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"

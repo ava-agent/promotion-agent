@@ -2756,7 +2756,7 @@ Or use the publish skill directly.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/ava-agent/promotion-agent/blob/main/LICENSE)
 ```
 
 - [ ] **Step 4: Create/update .gitignore**
