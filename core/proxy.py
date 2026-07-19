@@ -1,4 +1,4 @@
-"""MCPProxy — lazy loading and process management for external MCP servers.
+"""MCPProxy - lazy loading and process management for external MCP servers.
 
 v4.0 supports HTTP (streamable_http) transport only.
 See spec section 6.1 for stdio fallback.
@@ -10,8 +10,8 @@ import asyncio
 import atexit
 import os
 import subprocess
-from dataclasses import dataclass, field
-from typing import Dict, Optional
+from dataclasses import dataclass
+from typing import Dict
 
 import httpx
 
@@ -113,8 +113,8 @@ class MCPProxy:
         process = subprocess.Popen(
             config.start_cmd,
             cwd=config.local_path,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
         self._processes[name] = process
         self._running[name] = True
@@ -123,19 +123,23 @@ class MCPProxy:
         for _ in range(60):
             if await self._health_check(config):
                 return
+            return_code = process.poll()
+            if return_code is not None:
+                self._processes.pop(name, None)
+                self._running.pop(name, None)
+                raise RuntimeError(
+                    f"MCP '{name}' exited before becoming healthy "
+                    f"(status {return_code})"
+                )
             await asyncio.sleep(0.5)
 
-        # Timed out — clean up
+        # Timed out - clean up
         process.terminate()
         self._processes.pop(name, None)
         self._running.pop(name, None)
-        raise TimeoutError(
-            f"MCP '{name}' did not become healthy within 30 seconds"
-        )
+        raise TimeoutError(f"MCP '{name}' did not become healthy within 30 seconds")
 
-    async def call_tool(
-        self, name: str, tool_name: str, arguments: dict
-    ) -> dict:
+    async def call_tool(self, name: str, tool_name: str, arguments: dict) -> dict:
         """Forward a JSON-RPC tools/call request to an external MCP endpoint.
 
         Returns the 'result' field from the JSON-RPC response.

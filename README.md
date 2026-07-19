@@ -85,15 +85,28 @@ PROMOTE_OSCHINA_COOKIE=...
 
 ### X / Twitter
 
+Choose direct OAuth or Xquik.
+
+For direct OAuth:
+
 1. Visit [developer.x.com](https://developer.x.com), create Project + App
 2. Enable OAuth 1.0a with **Read and Write** permissions
 3. Generate Access Token & Secret
 
 ```bash
+PROMOTE_X_PROVIDER=direct
 PROMOTE_X_CONSUMER_KEY=your_consumer_key
 PROMOTE_X_CONSUMER_SECRET=your_consumer_secret
 PROMOTE_X_ACCESS_TOKEN=your_access_token
 PROMOTE_X_ACCESS_TOKEN_SECRET=your_access_token_secret
+```
+
+For Xquik, create an API key and select a connected account:
+
+```bash
+PROMOTE_X_PROVIDER=xquik
+PROMOTE_XQUIK_API_KEY=your_xquik_api_key
+PROMOTE_XQUIK_ACCOUNT=your_connected_account
 ```
 
 ---
@@ -257,7 +270,7 @@ This project is a **Claude Code Plugin** embedding an **MCP Server**.
 |-------|-----------|---------|
 | **Interaction** | Skills (`/publish`) | Guide user through publish flow: select platforms, preview, confirm, publish |
 | **Automation** | Agents (`publisher`) | Read content files, split by platform, batch publish, report results |
-| **Security** | Hooks (`auth-check`) | `PreToolUse` intercept on all `publish*` calls — validate auth before publishing |
+| **Security** | Hooks (`auth-check`) | `PreToolUse` intercept on all `publish*` calls - validate auth before publishing |
 | **Execution** | MCP Server (`server.py`) | 12 tools, launched as subprocess via `plugin.json` |
 | **Platform** | Platform classes | Each platform implements `adapt_content()` + `post()` + `health_check()` |
 
@@ -271,7 +284,7 @@ This project is a **Claude Code Plugin** embedding an **MCP Server**.
 | `publish_x` | Tweet or thread on X | `text`, `thread?`, `url?`, `hashtags?`, `dry_run?` |
 | `publish_xiaohongshu` | Post to Xiaohongshu | `title`, `body`, `images?`, `tags?`, `dry_run?` |
 | `publish_wechat` | Publish to WeChat | `title`, `body`, `cover_image?`, `digest?`, `dry_run?` |
-| `publish` | **Generic** — any of 18 platforms | `platform`, `title`, `body`, `tags?`, `url?`, `metadata?`, `dry_run?` |
+| `publish` | **Generic** - any of 18 platforms | `platform`, `title`, `body`, `tags?`, `url?`, `metadata?`, `dry_run?` |
 | `submit_directory` | Submit to AI directory | `directory`, `name`, `url`, `description`, `category?`, `pricing?`, `dry_run?` |
 
 > All publish tools support `dry_run: true` for preview without posting.
@@ -346,7 +359,7 @@ python3 get_cookies.py
 
 ### Juejin API "parameter error"
 
-Juejin's publish API may reject requests. The system creates a draft — visit [juejin.cn/editor/drafts](https://juejin.cn/editor/drafts) to publish manually.
+Juejin's publish API may reject requests. The system creates a draft - visit [juejin.cn/editor/drafts](https://juejin.cn/editor/drafts) to publish manually.
 
 ### CSDN 403 Forbidden
 
@@ -355,6 +368,8 @@ CSDN's WAF may block API calls. Use the CSDN web editor to publish manually when
 ### Auth hook blocking calls
 
 If `publish` calls are blocked, run `auth_status` to see what's missing, then configure the required credentials.
+
+Xquik is an independent third-party service. Not affiliated with X Corp. "Twitter" and "X" are trademarks of X Corp.
 
 ## License
 

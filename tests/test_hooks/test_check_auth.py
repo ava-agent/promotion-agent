@@ -12,7 +12,9 @@ from typing import Optional
 REPO_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 
 
-def run_hook(tool_input: dict, extra_env: Optional[dict] = None) -> subprocess.CompletedProcess:
+def run_hook(
+    tool_input: dict, extra_env: Optional[dict] = None
+) -> subprocess.CompletedProcess:
     env = {**os.environ}
     # Clear auth vars for clean test state
     for key in list(env):
@@ -33,10 +35,12 @@ def run_hook(tool_input: dict, extra_env: Optional[dict] = None) -> subprocess.C
 
 def test_publish_zhihu_no_cookie():
     """No cookie without dry_run should block (exit 2)."""
-    result = run_hook({
-        "tool_name": "mcp__promotion-agent__publish_zhihu",
-        "input": {"title": "T", "body": "B"},
-    })
+    result = run_hook(
+        {
+            "tool_name": "mcp__promotion-agent__publish_zhihu",
+            "input": {"title": "T", "body": "B"},
+        }
+    )
     assert result.returncode == 2
     assert "cookie" in result.stderr.lower() or "auth" in result.stderr.lower()
 
@@ -56,30 +60,71 @@ def test_publish_zhihu_with_cookie():
 
 def test_publish_x_no_creds():
     """No X creds without dry_run should block (exit 2)."""
-    result = run_hook({
-        "tool_name": "mcp__promotion-agent__publish_x",
-        "input": {"text": "Hello"},
-    })
+    result = run_hook(
+        {
+            "tool_name": "mcp__promotion-agent__publish_x",
+            "input": {"text": "Hello"},
+        }
+    )
     assert result.returncode == 2
     assert "PROMOTE_X" in result.stderr or "auth" in result.stderr.lower()
 
 
+def test_publish_x_with_xquik_creds():
+    result = run_hook(
+        {
+            "tool_name": "mcp__promotion-agent__publish_x",
+            "input": {"text": "Hello"},
+        },
+        extra_env={
+            "PROMOTE_X_PROVIDER": "xquik",
+            "PROMOTE_XQUIK_API_KEY": "test-api-key",
+            "PROMOTE_XQUIK_ACCOUNT": "test-account",
+        },
+    )
+    assert result.returncode == 0
+    assert "missing" not in result.stdout.lower()
+
+
+def test_publish_x_requires_selected_provider_credentials():
+    result = run_hook(
+        {
+            "tool_name": "mcp__promotion-agent__publish_x",
+            "input": {"text": "Hello"},
+        },
+        extra_env={
+            "PROMOTE_X_PROVIDER": "xquik",
+            "PROMOTE_X_CONSUMER_KEY": "consumer-key",
+            "PROMOTE_X_CONSUMER_SECRET": "consumer-secret",
+            "PROMOTE_X_ACCESS_TOKEN": "access-token",
+            "PROMOTE_X_ACCESS_TOKEN_SECRET": "access-token-secret",
+        },
+    )
+    assert result.returncode == 2
+    assert "Xquik API Key" in result.stderr
+    assert "Xquik Account" in result.stderr
+
+
 def test_publish_zhihu_no_cookie_non_dry_run_blocks():
     """Non-dry-run with missing auth should block (exit 2)."""
-    result = run_hook({
-        "tool_name": "mcp__promotion-agent__publish_zhihu",
-        "input": {"title": "T", "body": "B", "dry_run": False},
-    })
+    result = run_hook(
+        {
+            "tool_name": "mcp__promotion-agent__publish_zhihu",
+            "input": {"title": "T", "body": "B", "dry_run": False},
+        }
+    )
     assert result.returncode == 2
     assert "missing" in result.stderr.lower() or "auth" in result.stderr.lower()
 
 
 def test_publish_zhihu_no_cookie_dry_run_allows():
     """Dry-run with missing auth should warn but allow (exit 0)."""
-    result = run_hook({
-        "tool_name": "mcp__promotion-agent__publish_zhihu",
-        "input": {"title": "T", "body": "B", "dry_run": True},
-    })
+    result = run_hook(
+        {
+            "tool_name": "mcp__promotion-agent__publish_zhihu",
+            "input": {"title": "T", "body": "B", "dry_run": True},
+        }
+    )
     assert result.returncode == 0
     # Should have a warning message
     assert "missing" in result.stdout.lower() or "dry_run" in result.stdout.lower()
@@ -87,9 +132,11 @@ def test_publish_zhihu_no_cookie_dry_run_allows():
 
 def test_unknown_tool_passes():
     """Unknown tools should pass through without blocking."""
-    result = run_hook({
-        "tool_name": "mcp__other-server__some_tool",
-        "input": {"foo": "bar"},
-    })
+    result = run_hook(
+        {
+            "tool_name": "mcp__other-server__some_tool",
+            "input": {"foo": "bar"},
+        }
+    )
     assert result.returncode == 0
     assert result.stdout == ""

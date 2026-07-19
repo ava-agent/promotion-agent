@@ -16,6 +16,21 @@ class MockConfig:
     x_consumer_secret = "test_cs"
     x_access_token = "test_at"
     x_access_token_secret = "test_ats"
+    x_provider = "direct"
+    xquik_api_key = None
+    xquik_account = None
+    xquik_base_url = "https://xquik.com/api/v1"
+
+
+class MockXquikConfig:
+    x_consumer_key = None
+    x_consumer_secret = None
+    x_access_token = None
+    x_access_token_secret = None
+    x_provider = "xquik"
+    xquik_api_key = "test-api-key"
+    xquik_account = "test-account"
+    xquik_base_url = "https://example.test/api/v1"
 
 
 @pytest.fixture
@@ -60,6 +75,25 @@ def test_validate_config_partial():
         x_access_token_secret = None
 
     platform = XTwitterPlatform(Partial())
+    assert platform.validate_config() is False
+
+
+def test_validate_config_xquik():
+    platform = XTwitterPlatform(MockXquikConfig())
+    assert platform.validate_config() is True
+
+
+def test_direct_provider_does_not_silently_switch_to_xquik():
+    class DirectWithXquikOnly:
+        x_consumer_key = None
+        x_consumer_secret = None
+        x_access_token = None
+        x_access_token_secret = None
+        x_provider = "direct"
+        xquik_api_key = "test-api-key"
+        xquik_account = "test-account"
+
+    platform = XTwitterPlatform(DirectWithXquikOnly())
     assert platform.validate_config() is False
 
 
@@ -188,3 +222,72 @@ async def test_post_failure(platform, sample_content):
     assert result.success is False
     assert "Rate limit" in result.error
     assert result.error_type == "tweepy_error"
+
+
+@pytest.mark.asyncio
+async def test_post_single_tweet_with_xquik(sample_content):
+    """Post a single tweet through Xquik."""
+    platform = XTwitterPlatform(MockXquikConfig())
+    response = MagicMock()
+    response.json.return_value = {"tweetId": "987654321", "success": True}
+    response.raise_for_status.return_value = None
+
+    mock_client = AsyncMock()
+    mock_client.post.return_value = response
+    mock_context = AsyncMock()
+    mock_context.__aenter__.return_value = mock_client
+    mock_context.__aexit__.return_value = None
+
+    with patch("platforms.x_twitter.httpx.AsyncClient", return_value=mock_context):
+        result = await platform.post(sample_content)
+
+    assert result.success is True
+    assert result.post_id == "987654321"
+    assert "987654321" in result.url
+    mock_client.post.assert_awaited_once()
+    _, kwargs = mock_client.post.call_args
+    assert kwargs["headers"] == {"x-api-key": "test-api-key"}
+    assert kwargs["json"]["account"] == "test-account"
+    assert kwargs["json"]["text"] == platform.adapt_content(sample_content)["text"]
+
+
+@pytest.mark.asyncio
+async def test_post_thread_with_xquik():
+    """Post a thread through Xquik using reply_to_tweet_id."""
+    platform = XTwitterPlatform(MockXquikConfig())
+    content = PromotionContent(
+        title="Thread",
+        body="Body",
+        metadata={"thread": ["First", "Second", "Third"]},
+    )
+
+    responses = []
+    for tweet_id in ["100", "200", "300"]:
+        response = MagicMock()
+        response.json.return_value = {"tweetId": tweet_id, "success": True}
+        response.raise_for_status.return_value = None
+        responses.append(response)
+
+    mock_client = AsyncMock()
+    mock_client.post.side_effect = responses
+    mock_context = AsyncMock()
+    mock_context.__aenter__.return_value = mock_client
+    mock_context.__aexit__.return_value = None
+
+    with patch("platforms.x_twitter.httpx.AsyncClient", return_value=mock_context):
+        result = await platform.post(content)
+
+    assert result.success is True
+    assert result.post_id == "100"
+    payloads = [call.kwargs["json"] for call in mock_client.post.await_args_list]
+    assert payloads[0] == {"account": "test-account", "text": "First"}
+    assert payloads[1] == {
+        "account": "test-account",
+        "text": "Second",
+        "reply_to_tweet_id": "100",
+    }
+    assert payloads[2] == {
+        "account": "test-account",
+        "text": "Third",
+        "reply_to_tweet_id": "200",
+    }
