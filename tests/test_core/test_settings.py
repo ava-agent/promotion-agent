@@ -1,10 +1,5 @@
 """Tests for settings and env loader."""
 
-import os
-import tempfile
-
-import pytest
-
 from core.settings import PromotionSettings
 from core.loader import discover_env_file
 
@@ -22,6 +17,10 @@ class TestPromotionSettings:
         assert settings.x_consumer_secret is None
         assert settings.x_access_token is None
         assert settings.x_access_token_secret is None
+        assert settings.x_provider == "direct"
+        assert settings.xquik_api_key is None
+        assert settings.xquik_account is None
+        assert settings.xquik_base_url == "https://xquik.com/api/v1"
         assert settings.wechat_app_id is None
         assert settings.wechat_app_secret is None
 
@@ -39,11 +38,19 @@ class TestPromotionSettings:
         monkeypatch.setenv("PROMOTE_X_CONSUMER_SECRET", "cs")
         monkeypatch.setenv("PROMOTE_X_ACCESS_TOKEN", "at")
         monkeypatch.setenv("PROMOTE_X_ACCESS_TOKEN_SECRET", "ats")
+        monkeypatch.setenv("PROMOTE_X_PROVIDER", "xquik")
+        monkeypatch.setenv("PROMOTE_XQUIK_API_KEY", "test-api-key")
+        monkeypatch.setenv("PROMOTE_XQUIK_ACCOUNT", "account-1")
+        monkeypatch.setenv("PROMOTE_XQUIK_BASE_URL", "https://example.test/api/v1")
         settings = PromotionSettings(_env_file=None)
         assert settings.x_consumer_key == "ck"
         assert settings.x_consumer_secret == "cs"
         assert settings.x_access_token == "at"
         assert settings.x_access_token_secret == "ats"
+        assert settings.x_provider == "xquik"
+        assert settings.xquik_api_key == "test-api-key"
+        assert settings.xquik_account == "account-1"
+        assert settings.xquik_base_url == "https://example.test/api/v1"
 
     def test_wechat_fields(self, monkeypatch):
         """WeChat app_id and app_secret are recognized."""

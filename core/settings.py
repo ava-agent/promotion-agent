@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class PromotionSettings(BaseSettings):
-    """Settings for v4 — 18 platforms + 3 AI directories.
+    """Settings for v4 - 18 platforms + 3 AI directories.
 
     Supported: Zhihu, X/Twitter, Xiaohongshu, WeChat, Juejin, CSDN,
     Dev.to, Reddit, LinkedIn, Product Hunt, CNBlogs, Hacker News,
@@ -20,67 +20,71 @@ class PromotionSettings(BaseSettings):
         case_sensitive=False,
     )
 
-    # ── 知乎 (Zhihu) — Cookie auth ──
+    # Zhihu - Cookie auth
     zhihu_cookie: Optional[str] = None
 
-    # ── X (Twitter) — OAuth 1.0a ──
+    # X (Twitter) - OAuth 1.0a or Xquik
     x_consumer_key: Optional[str] = None
     x_consumer_secret: Optional[str] = None
     x_access_token: Optional[str] = None
     x_access_token_secret: Optional[str] = None
+    x_provider: str = "direct"
+    xquik_api_key: Optional[str] = None
+    xquik_account: Optional[str] = None
+    xquik_base_url: str = "https://xquik.com/api/v1"
 
-    # ── 微信公众号 (WeChat Official Account) — App credentials ──
+    # WeChat Official Account - App credentials
     wechat_app_id: Optional[str] = None
     wechat_app_secret: Optional[str] = None
 
-    # ── 掘金 (Juejin) — Cookie auth ──
+    # Juejin - Cookie auth
     juejin_cookie: Optional[str] = None
 
-    # ── CSDN — Cookie auth ──
+    # CSDN - Cookie auth
     csdn_cookie: Optional[str] = None
 
-    # ── Dev.to — API Key ──
+    # Dev.to - API Key
     devto_api_key: Optional[str] = None
 
-    # ── Reddit — OAuth ──
+    # Reddit - OAuth
     reddit_client_id: Optional[str] = None
     reddit_client_secret: Optional[str] = None
     reddit_username: Optional[str] = None
     reddit_password: Optional[str] = None
 
-    # ── LinkedIn — OAuth 2.0 Bearer ──
+    # LinkedIn - OAuth 2.0 Bearer
     linkedin_access_token: Optional[str] = None
 
-    # ── Product Hunt — OAuth 2.0 Bearer ──
+    # Product Hunt - OAuth 2.0 Bearer
     producthunt_token: Optional[str] = None
 
-    # ── 博客园 (CNBlogs) — MetaWeblog API ──
+    # CNBlogs - MetaWeblog API
     cnblogs_blog_url: Optional[str] = None
     cnblogs_username: Optional[str] = None
     cnblogs_token: Optional[str] = None
 
-    # ── Hacker News — Username + Password ──
+    # Hacker News - Username + Password
     hn_username: Optional[str] = None
     hn_password: Optional[str] = None
 
-    # ── MoltBook — API Key ──
+    # MoltBook - API Key
     moltbook_api_key: Optional[str] = None
 
-    # ── Medium — Integration Token ──
+    # Medium - Integration Token
     medium_integration_token: Optional[str] = None
 
-    # ── Hashnode — Personal Access Token ──
+    # Hashnode - Personal Access Token
     hashnode_token: Optional[str] = None
     hashnode_publication_id: Optional[str] = None
 
-    # ── 微博 (Weibo) — OAuth 2.0 ──
+    # Weibo - OAuth 2.0
     weibo_access_token: Optional[str] = None
 
-    # ── V2EX — Personal Access Token ──
+    # V2EX - Personal Access Token
     v2ex_token: Optional[str] = None
 
-    # ── SegmentFault — Cookie auth ──
+    # SegmentFault - Cookie auth
     segmentfault_cookie: Optional[str] = None
 
-    # ── OSCHINA — Cookie auth ──
+    # OSCHINA - Cookie auth
     oschina_cookie: Optional[str] = None

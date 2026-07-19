@@ -1,4 +1,4 @@
-"""Tests for MCPProxy — lazy loading and process management."""
+"""Tests for MCPProxy - lazy loading and process management."""
 
 from __future__ import annotations
 
@@ -63,7 +63,9 @@ async def test_is_running_returns_true_when_healthy():
     proxy.register(cfg)
     proxy._running["test"] = True
 
-    with patch.object(proxy, "_health_check", new_callable=AsyncMock, return_value=True):
+    with patch.object(
+        proxy, "_health_check", new_callable=AsyncMock, return_value=True
+    ):
         result = await proxy.is_running("test")
     assert result is True
 
@@ -81,9 +83,50 @@ async def test_is_running_returns_false_when_unhealthy():
     proxy.register(cfg)
     proxy._running["test"] = True
 
-    with patch.object(proxy, "_health_check", new_callable=AsyncMock, return_value=False):
+    with patch.object(
+        proxy, "_health_check", new_callable=AsyncMock, return_value=False
+    ):
         result = await proxy.is_running("test")
     assert result is False
+
+
+# --- MCPProxy.ensure_running ---
+
+
+@pytest.mark.asyncio
+async def test_ensure_running_reports_early_process_exit():
+    proxy = MCPProxy()
+    cfg = ExternalMCPConfig(
+        name="test",
+        repo="https://github.com/org/test",
+        local_path="/tmp/test",
+        start_cmd=["python", "server.py"],
+        endpoint="http://localhost:3000/mcp",
+    )
+    proxy.register(cfg)
+    process = MagicMock(spec=subprocess.Popen)
+    process.poll.return_value = 7
+
+    with (
+        patch("core.proxy.os.path.isdir", return_value=True),
+        patch("core.proxy.subprocess.Popen", return_value=process) as popen,
+        patch.object(
+            proxy, "_health_check", new_callable=AsyncMock, return_value=False
+        ),
+        patch("core.proxy.asyncio.sleep", new_callable=AsyncMock) as sleep,
+        pytest.raises(RuntimeError, match="exited before becoming healthy.*status 7"),
+    ):
+        await proxy.ensure_running("test")
+
+    popen.assert_called_once_with(
+        ["python", "server.py"],
+        cwd="/tmp/test",
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    sleep.assert_not_awaited()
+    assert "test" not in proxy._processes
+    assert "test" not in proxy._running
 
 
 # --- MCPProxy.call_tool ---
